@@ -13,7 +13,7 @@ long double De=0,period=10.878278481971048332082512612548/100*(100+De);
 long double frequency=0,peakO=37.6834589/2,peak=37.6834589/2,FWHM=0.001,interval_1=FWHM*10,interval_2=period-interval_1; //frequency:¸üªi¨¤ÀW²v¡Cperoid¡G¯ß½Ä©P´Á¡CFWHM¡G¯ß½Ä¥b°ª¼e¡Cpeak¡G©Ô¤ñÀW²v³Ì¤j­È
 long double dt_1=interval_1/ninterval_1,dt_2=interval_2/ninterval_2;
 const int neq=4,nexp=12,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
-
+e3e32e23e23e23
 long double r[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//total decay constant
 long double R[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//relaxation rate
 long double A[neq][neq]={{0,0,0,0},{0,0,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0}};//Einstein A coefficient
