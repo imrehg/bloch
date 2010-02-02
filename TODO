@@ -1,0 +1,15 @@
+Simpler
+------
+
+ * Benchmark/timing scripts in bash/python
+ * Comment system
+ * Readme
+ * Code reformatting for width, whitespace conventions, readability.
+ * Chinese -> English translation
+
+Complex
+------
+
+ * Modular arrangement of files (separating calculation code from setup and in/output)
+ * Tests (dependent on modular code)
+ * Check matrix/linear algebra package to simplify calculation
