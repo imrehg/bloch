@@ -10,9 +10,8 @@
 using namespace std;
 const long double pi=3.141592654;
 const int npulse=5000,ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
-long double De=0,period=10.878278481971048332082512612548/100*(100+De);
-long double frequency=0,peakO=37.6834589/2,peak=37.6834589/2,FWHM=0.001,interval_1=FWHM*10,interval_2=period-interval_1; //frequency:載波角頻率。peroid：脈衝周期。FWHM：脈衝半高寬。peak：拉比頻率最大值
-long double dt_1=interval_1/ninterval_1,dt_2=interval_2/ninterval_2;
+long double period0=10.878278481971048332082512612548;
+long double frequency=0,peakO=37.6834589/2,FWHM=0.001; //frequency:載波角頻率。peroid：脈衝周期。FWHM：脈衝半高寬。peak：拉比頻率最大值
 const int neq=4,nexp=12,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 long double r[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//total decay constant
 long double R[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//relaxation rate
@@ -24,7 +23,6 @@ long double d[neq][neq]={{0,0,0,-0.20124*2*pi-9.192631*2*pi},
                          {+9.192631*2*pi,9.192631*2*pi,9.192631*2*pi,0}};//laser */
 long double y0I[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};//initial condition
 long double y0R[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0.5,0},{0,0,0,0.5}};//initial condiion
-
 void fun(long double ***,long double ***,long double **,int );//聯立方程式
 void solve(long double ***,long double ***,long double ***,long double ***,long double ***,long double*,int);//演算法
 long double ReRabi(long double );//脈衝包絡線函數(實部)
@@ -43,7 +41,7 @@ int factorial (int num)
  return factorial(num-1)*num; // recursive call
 }
 
-long double ReRabi(long double x)//脈衝包絡線函數(實部)，高斯函數*Re[e^{-i*phase}]
+long double ReRabi(long double x,long double period,long double peak)//脈衝包絡線函數(實部)，高斯函數*Re[e^{-i*phase}]
 {
   long double value=0,time=0,factor=0;
   int i=0;
@@ -57,7 +55,7 @@ long double ReRabi(long double x)//脈衝包絡線函數(實部)，高斯函數*Re[e^{-i*phase
   return peak*value;
 }
 
-long double ImRabi(long double x)//脈衝包絡線函數(虛部)，高斯函數*Im[e^{-i*phase}]
+long double ImRabi(long double x,long double period,long double peak)//脈衝包絡線函數(虛部)，高斯函數*Im[e^{-i*phase}]
 {
   long double value=0,time=0,factor=0;
   int i=0;
@@ -286,12 +284,16 @@ int main()
 {
 
   int start=clock();
+
+
   long double phase=0;
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
-  file1.open("input.txt", ios::out | ios::trunc);
-  file2.open("data.txt", ios::out | ios::trunc);
+  file1.open("inputMP.txt", ios::out | ios::trunc);
+  file2.open("dataMP.txt", ios::out | ios::trunc);
   file2.precision(10);
-
+#pragma omp parallel for
+for(int thread=0;thread<2;thread++)
+{
    long double *Time= new long double[ninterval_1+ninterval_2+1];
    long double ***M= new long double**[ninterval_1+ninterval_2+1];//Rabifrequence*2
 
@@ -329,17 +331,16 @@ int main()
               presultI[i][j]=new long double[neq];
            }
      }
-
-
-
 /////////////////////////////Sweeping//////////////////////////////////
-for(int m=-200;m<=200;m++){
+for(int m=-200*omp_get_thread_num();m<=200*(1-omp_get_thread_num());m++){
 
-cout<<m<<endl;
+   cout<<m<<endl;
 
-   De=m/200.0;
-   period=10.878278481971048332082512612548/100*(100+De);
-   peak=peakO*(100+De)/100;
+   long double De=m/200.0;
+   long double period=10.878278481971048332082512612548/100*(100+De);
+   long double peak=peakO*(100+De)/100;
+   long double interval_1=FWHM*10,interval_2=period-interval_1;
+   long double dt_1=interval_1/ninterval_1,dt_2=interval_2/ninterval_2;
    interval_2=period-interval_1;
    dt_2=interval_2/ninterval_2;
 
@@ -388,18 +389,18 @@ cout<<m<<endl;
 
               M[k][0][0]=0;
               M[k][0][1]=0;
-              M[k][0][2]=-2.269*ReRabi(buffer);
-              M[k][0][3]=1.906*ReRabi(buffer);
+              M[k][0][2]=-2.269*ReRabi(buffer,period,peak);
+              M[k][0][3]=1.906*ReRabi(buffer,period,peak);
               M[k][1][0]=0;
               M[k][1][1]=0;
-              M[k][1][2]=2.269*ReRabi(buffer);
-              M[k][1][3]=1.906*ReRabi(buffer);
-              M[k][2][0]=-2.269*ReRabi(buffer);
-              M[k][2][1]=2.269*ReRabi(buffer);
+              M[k][1][2]=2.269*ReRabi(buffer,period,peak);
+              M[k][1][3]=1.906*ReRabi(buffer,period,peak);
+              M[k][2][0]=-2.269*ReRabi(buffer,period,peak);
+              M[k][2][1]=2.269*ReRabi(buffer,period,peak);
               M[k][2][2]=0;
               M[k][2][3]=0;
-              M[k][3][0]=1.906*ReRabi(buffer);
-              M[k][3][1]=1.906*ReRabi(buffer);
+              M[k][3][0]=1.906*ReRabi(buffer,period,peak);
+              M[k][3][1]=1.906*ReRabi(buffer,period,peak);
               M[k][3][2]=0;
               M[k][3][3]=0;
            }
@@ -476,6 +477,7 @@ buffer=buffer/(ninterval_1+ninterval_2+1);
       delete[] Trans;
       delete[] Trans_AVE;
 
+}
   cout<<"time spent:"<<(clock()-start)/CLOCKS_PER_SEC<<"sec";
 
   return 0;

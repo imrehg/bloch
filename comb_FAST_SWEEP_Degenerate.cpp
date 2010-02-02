@@ -5,8 +5,8 @@
 #include <cmath>
 #include <fstream>
 #include <iomanip>
-#include <ctime>
-#include <omp.h>
+#include <time.h>
+
 using namespace std;
 const long double pi=3.141592654;
 const int npulse=5000,ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
@@ -14,6 +14,7 @@ long double De=0,period=10.878278481971048332082512612548/100*(100+De);
 long double frequency=0,peakO=37.6834589/2,peak=37.6834589/2,FWHM=0.001,interval_1=FWHM*10,interval_2=period-interval_1; //frequency:載波角頻率。peroid：脈衝周期。FWHM：脈衝半高寬。peak：拉比頻率最大值
 long double dt_1=interval_1/ninterval_1,dt_2=interval_2/ninterval_2;
 const int neq=4,nexp=12,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
+
 long double r[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//total decay constant
 long double R[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//relaxation rate
 long double A[neq][neq]={{0,0,0,0},{0,0,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0}};//Einstein A coefficient
@@ -21,7 +22,7 @@ long double R_L[neq]={0,0,0,0};//laser line width
 long double d[neq][neq]={{0,0,0,-0.20124*2*pi-9.192631*2*pi},
                          {0,0,0,-9.192631*2*pi},
                          {0,0,0,-9.192631*2*pi},
-                         {+9.192631*2*pi,9.192631*2*pi,9.192631*2*pi,0}};//laser */
+                         {+9.192631*2*pi,0,0,0}};//laser */
 long double y0I[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};//initial condition
 long double y0R[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0.5,0},{0,0,0,0.5}};//initial condiion
 
@@ -88,16 +89,21 @@ void Matrix_Multiply(long double ****A,long double ****B)//A=B*A ;C:Buffer
              }
           }
        }
-      for(int a=0;a<neq;a++){
+
+
+      for(int a=0;a<neq;a++)
            for(int b=0;b<=a;b++)
              for(int c=0;c<neq;c++)
                  for(int d=0;d<neq;d++){
+
                      C[a+neq][b][c][d]=0;
                      C[a+neq][b][c+neq][d]=0;
                      C[a][b][c+neq][d]=0;
                      C[a][b][c][d]=0;
+
                           for(int e=0;e<neq;e++)
                                  for(int f=0;f<neq;f++){
+
                                         C[a+neq][b][c][d]+=B[a+neq][b][e+neq][f]*A[e+neq][f][c][d]+B[a+neq][b][e][f]*A[e][f][c][d];
                                         C[a+neq][b][c+neq][d]+=B[a+neq][b][e+neq][f]*A[e+neq][f][c+neq][d]+B[a+neq][b][e][f]*A[e][f][c+neq][d];
                                         C[a][b][c+neq][d]+=B[a][b][e+neq][f]*A[e+neq][f][c+neq][d]+B[a][b][e][f]*A[e][f][c+neq][d];
@@ -109,7 +115,8 @@ void Matrix_Multiply(long double ****A,long double ****B)//A=B*A ;C:Buffer
                                  C[b][a][c+neq][d]=C[a][b][c+neq][d];
                                  C[b][a][c][d]=C[a][b][c][d];
 
-                 }}
+                 }
+
 
        for(int a=0;a<neq;a++)
            for(int b=0;b<=a;b++)
@@ -213,6 +220,7 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
      }
   }
 
+
   for(int t=1;t<(ninterval_1+ninterval_2)+1;t++){
 
     for(int n=0;n<2*neq;n++)
@@ -284,7 +292,6 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
 
 int main()
 {
-
   int start=clock();
   long double phase=0;
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
@@ -332,8 +339,12 @@ int main()
 
 
 
+
+
+
 /////////////////////////////Sweeping//////////////////////////////////
-for(int m=-200;m<=200;m++){
+
+for(int m=-50;m<=50;m++){
 
 cout<<m<<endl;
 
@@ -388,13 +399,13 @@ cout<<m<<endl;
 
               M[k][0][0]=0;
               M[k][0][1]=0;
-              M[k][0][2]=-2.269*ReRabi(buffer);
+              M[k][0][2]=2.269*ReRabi(buffer);
               M[k][0][3]=1.906*ReRabi(buffer);
               M[k][1][0]=0;
               M[k][1][1]=0;
               M[k][1][2]=2.269*ReRabi(buffer);
               M[k][1][3]=1.906*ReRabi(buffer);
-              M[k][2][0]=-2.269*ReRabi(buffer);
+              M[k][2][0]=2.269*ReRabi(buffer);
               M[k][2][1]=2.269*ReRabi(buffer);
               M[k][2][2]=0;
               M[k][2][3]=0;
@@ -447,12 +458,11 @@ buffer=buffer/(ninterval_1+ninterval_2+1);
 
        file2<<setiosflags(ios::left)<<setw(20)<<1/period;
        file2<<setiosflags(ios::left)<<setw(20)<<buffer;
-       file2<<setiosflags(ios::left)<<setw(20)<<k;
-       file2<<setiosflags(ios::left)<<setw(20)<<m<<endl;
+       file2<<setiosflags(ios::left)<<setw(20)<<k<<endl;
 
 }
 
-///////////////////////////////End of Sweeping//////////////////////////////////
+/////////////////////////////End of Sweeping//////////////////////////////////
 
 
 
@@ -476,7 +486,8 @@ buffer=buffer/(ninterval_1+ninterval_2+1);
       delete[] Trans;
       delete[] Trans_AVE;
 
-  cout<<"time spent:"<<(clock()-start)/CLOCKS_PER_SEC<<"sec";
+
+  cout<<"time spent:"<<(clock()-start)/1000.0<<"sec";
 
   return 0;
 
