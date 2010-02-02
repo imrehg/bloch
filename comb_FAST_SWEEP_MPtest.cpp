@@ -332,7 +332,7 @@ for(int thread=0;thread<2;thread++)
            }
      }
 /////////////////////////////Sweeping//////////////////////////////////
-for(int m=-200*omp_get_thread_num();m<=200*(1-omp_get_thread_num());m++){
+for(int m=-20*omp_get_thread_num();m<=20*(1-omp_get_thread_num());m++){
 
    cout<<m<<endl;
 
