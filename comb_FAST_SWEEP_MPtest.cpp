@@ -1,18 +1,18 @@
-#include <iostream>
-#include <cstdlib>
-#include <cctype>
-#include <cstring>
-#include <cmath>
-#include <fstream>
-#include <iomanip>
-#include <ctime>
-#include <omp.h>
+#include <iostream> //FOR file IO
+#include <fstream>//For file IO
+//#include <cstdlib> //
+//#include <cctype>
+//#include <cstring>
+#include <cmath>//For sin cos functions
+#include <iomanip>//For  setiosflags
+#include <ctime>//For timer
+#include <omp.h>//For openmp
 using namespace std;
 const long double pi=3.141592654;
 const int npulse=5000,ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 long double period0=10.878278481971048332082512612548;
 long double frequency=0,peakO=37.6834589/2,FWHM=0.001; //frequency:載波角頻率。peroid：脈衝周期。FWHM：脈衝半高寬。peak：拉比頻率最大值
-const int neq=4,nexp=12,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
+const int  neq=4,nexp=12,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 long double r[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//total decay constant
 long double R[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//relaxation rate
 long double A[neq][neq]={{0,0,0,0},{0,0,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0}};//Einstein A coefficient
@@ -25,8 +25,8 @@ long double y0I[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};//initial co
 long double y0R[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0.5,0},{0,0,0,0.5}};//initial condiion
 void fun(long double ***,long double ***,long double **,int );//聯立方程式
 void solve(long double ***,long double ***,long double ***,long double ***,long double ***,long double*,int);//演算法
-long double ReRabi(long double );//脈衝包絡線函數(實部)
-long double ImRabi(long double );//脈衝包絡線函數(虛部)
+long double ReRabi(long double,long double,long double );//脈衝包絡線函數(實部)
+long double ImRabi(long double,long double,long double );//脈衝包絡線函數(虛部)
 int factorial (int);
 void fun_Matrix(long double *****,long double **);
 void solve_Martix(long double ***,long double ****,long double ****,long double *);
@@ -86,6 +86,7 @@ void Matrix_Multiply(long double ****A,long double ****B)//A=B*A ;C:Buffer
              }
           }
        }
+
       for(int a=0;a<neq;a++){
            for(int b=0;b<=a;b++)
              for(int c=0;c<neq;c++)
@@ -131,7 +132,6 @@ void Matrix_Multiply(long double ****A,long double ****B)//A=B*A ;C:Buffer
                   delete[] C[i+neq][j][k+neq];
                   delete[] C[i][j][k+neq];
             }
-
 
      for(int i=0;i<neq;i++)
          for(int j=0;j<neq;j++){
@@ -291,6 +291,7 @@ int main()
   file1.open("inputMP.txt", ios::out | ios::trunc);
   file2.open("dataMP.txt", ios::out | ios::trunc);
   file2.precision(10);
+#pragma omp num_threads(1)
 #pragma omp parallel for
 for(int thread=0;thread<2;thread++)
 {
@@ -332,7 +333,9 @@ for(int thread=0;thread<2;thread++)
            }
      }
 /////////////////////////////Sweeping//////////////////////////////////
-for(int m=-20*omp_get_thread_num();m<=20*(1-omp_get_thread_num());m++){
+
+for(int m=-20*omp_get_thread_num();m<=20*(1-omp_get_thread_num());m++)
+{
 
    cout<<m<<endl;
 

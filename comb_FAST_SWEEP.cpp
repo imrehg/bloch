@@ -1,12 +1,12 @@
-#include <iostream>
-#include <cstdlib>
-#include <cctype>
-#include <cstring>
-#include <cmath>
-#include <fstream>
-#include <iomanip>
-#include <ctime>
-#include <omp.h>
+#include <iostream> //FOR file IO
+#include <fstream>//For file IO
+//#include <cstdlib> //
+//#include <cctype>
+//#include <cstring>
+#include <cmath>//For sin cos functions
+#include <iomanip>//For  setiosflags
+#include <ctime>//For timer
+#include <omp.h>//For openmp
 using namespace std;
 const long double pi=3.141592654;
 const int npulse=5000,ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
@@ -285,7 +285,7 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
 int main()
 {
 
-  int start=clock();
+  double start=omp_get_wtime();
   long double phase=0;
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
   file1.open("input.txt", ios::out | ios::trunc);
@@ -476,7 +476,7 @@ buffer=buffer/(ninterval_1+ninterval_2+1);
       delete[] Trans;
       delete[] Trans_AVE;
 
-  cout<<"time spent:"<<(clock()-start)/CLOCKS_PER_SEC<<"sec";
+  cout<<"time spent:"<<(omp_get_wtime()-start)<<"sec";
 
   return 0;
 
