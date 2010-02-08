@@ -3,7 +3,9 @@ extern int sweep();
 
 int main()
 {
-      sweep();
+
+      sweep(40);
 
 return 0;
+
 }

@@ -17,10 +17,11 @@ long double r[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//total decay constant
 long double R[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//relaxation rate
 long double A[neq][neq]={{0,0,0,0},{0,0,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0}};//Einstein A coefficient
 long double R_L[neq]={0,0,0,0};//laser line width
-long double d[neq][neq]={{0,0,0,-0.20124*2*pi-9.192631*2*pi},
-                         {0,0,0,-9.192631*2*pi},
-                         {0,0,0,-9.192631*2*pi},
-                         {+9.192631*2*pi,9.192631*2*pi,9.192631*2*pi,0}};//laser */
+long double lasDe = 0.0087*2*pi;
+long double d[neq][neq]={{0,-0.20124*2*pi,-0.20124*2*pi+lasDe,-0.20124*2*pi-9.192631*2*pi+lasDe},
+                         {+0.20124*2*pi,0,+lasDe,-9.192631*2*pi+lasDe},
+                         {0.20124*2*pi-lasDe,0-lasDe,0,-9.192631*2*pi},
+                         {+9.192631*2*pi+0.20124*2*pi-lasDe,+9.192631*2*pi-lasDe,9.192631*2*pi,0}};//laser */
 long double y0I[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};//initial condition
 long double y0R[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0.5,0},{0,0,0,0.5}};//initial condiion
 void fun(long double ***,long double ***,long double **,int );//聯立方程式
@@ -32,6 +33,7 @@ void fun_Matrix(long double *****,long double **);
 void solve_Martix(long double ***,long double ****,long double ****,long double *);
 void Matrix_Multiply(long double ****,long double ****);
 double phase=0;
+int sweep (int);
 
 
 int factorial (int num)
@@ -280,10 +282,8 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
 
 }
 
-int sweep()
+int sweep(int steps)
 {
-
-  int start=clock();
 
 
   long double phase=0;
@@ -334,7 +334,7 @@ for(int thread=0;thread<2;thread++)
      }
 /////////////////////////////Sweeping//////////////////////////////////
 
-for(int m=-20*omp_get_thread_num();m<=20*(1-omp_get_thread_num());m++)
+for(int m=-steps*omp_get_thread_num();m<=steps*(1-omp_get_thread_num());m++)
 {
 
    cout<<m<<endl;
@@ -392,17 +392,17 @@ for(int m=-20*omp_get_thread_num();m<=20*(1-omp_get_thread_num());m++)
 
               M[k][0][0]=0;
               M[k][0][1]=0;
-              M[k][0][2]=-2.269*ReRabi(buffer,period,peak);
-              M[k][0][3]=1.906*ReRabi(buffer,period,peak);
+              M[k][0][2]=2.61*ReRabi(buffer,period,peak);
+              M[k][0][3]=1.302*ReRabi(buffer,period,peak);
               M[k][1][0]=0;
               M[k][1][1]=0;
               M[k][1][2]=2.269*ReRabi(buffer,period,peak);
               M[k][1][3]=1.906*ReRabi(buffer,period,peak);
-              M[k][2][0]=-2.269*ReRabi(buffer,period,peak);
+              M[k][2][0]=2.61*ReRabi(buffer,period,peak);
               M[k][2][1]=2.269*ReRabi(buffer,period,peak);
               M[k][2][2]=0;
               M[k][2][3]=0;
-              M[k][3][0]=1.906*ReRabi(buffer,period,peak);
+              M[k][3][0]=1.302*ReRabi(buffer,period,peak);
               M[k][3][1]=1.906*ReRabi(buffer,period,peak);
               M[k][3][2]=0;
               M[k][3][3]=0;
@@ -481,7 +481,6 @@ buffer=buffer/(ninterval_1+ninterval_2+1);
       delete[] Trans_AVE;
 
 }
-  cout<<"time spent:"<<(clock()-start)/CLOCKS_PER_SEC<<"sec";
 
   return 0;
 
