@@ -280,7 +280,7 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
 
 }
 
-int main()
+int sweep()
 {
 
   int start=clock();
