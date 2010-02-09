@@ -3,8 +3,8 @@ extern int sweep();
 
 int main()
 {
-
-      sweep(200,20000);
+    for(int i=0;i<10;i++)
+      sweep(200,1000,150*pow(2,i));
 
 return 0;
 

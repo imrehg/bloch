@@ -39,7 +39,7 @@ void fun_Matrix(long double *****,long double **);
 void solve_Martix(long double ***,long double ****,long double ****,long double *);
 void Matrix_Multiply(long double ****,long double ****);
 double phase=0;
-int sweep (int,int);
+int sweep (int,int,long double);
 
 
 int factorial (int num)
@@ -288,18 +288,24 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
 
 }
 
-int sweep(int steps,int total_steps)
+int sweep(int steps,int total_steps,long double PeakPower)
 {
 
 
   long double phase=0;
+
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
-
-
-
+  peakO = PeakPower/150*0.91354/2;
+  stringstream strstream;
+  string filename;
+  strstream<<PeakPower<<"umW_cm2.txt";
+  strstream>>filename;
+  cout<<filename.c_str()<<endl;
+  file2.open(filename.c_str(),ios::out | ios::trunc);
   file1.open("inputMP.txt", ios::out | ios::trunc);
-  file2.open("dataMP.txt", ios::out | ios::trunc);
   file2.precision(10);
+
+
 #pragma omp num_threads(1)
 #pragma omp parallel for
 for(int thread=0;thread<2;thread++)
