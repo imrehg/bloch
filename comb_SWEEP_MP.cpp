@@ -3,6 +3,8 @@
 //#include <cstdlib> //
 //#include <cctype>
 //#include <cstring>
+#include <string>//to use string
+#include <sstream>//to use sstream
 #include <cmath>//For sin cos functions
 #include <iomanip>//For  setiosflags
 #include <ctime>//For timer
@@ -10,18 +12,18 @@
 using namespace std;
 const long double pi=3.141592654;
 const int npulse=5000,ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
-long double period0=10.878278481971048332082512612548;
-long double frequency=0,peakO=37.6834589/2,FWHM=0.001; //frequency:載波角頻率。peroid：脈衝周期。FWHM：脈衝半高寬。peak：拉比頻率最大值
+long double period0=10.87827848197104833208251261254802895928271242476719;
+long double frequency=0,peakO=0.91354/2,FWHM=0.001; //about 150uW/cm2
 const int  neq=4,nexp=12,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 long double r[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//total decay constant
 long double R[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//relaxation rate
 long double Rc[neq][neq]={{0,0,0,0},
                           {0,0,0,0},
-                          {0,0,0,0.0000005*2*pi},
-                          {0,0,0.0000005*2*pi,0}};//coherence relaxation rate
+                          {0,0,0,0},
+                          {0,0,0,0}};//coherence relaxation rate
 long double A[neq][neq]={{0,0,0,0},{0,0,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0}};//Einstein A coefficient
 long double R_L[neq]={0,0,0,0};//laser line width
-long double lasDe = 0.0087*2*pi;
+long double lasDe = 0;
 long double d[neq][neq]={{0,-0.20124*2*pi,-0.20124*2*pi+lasDe,-0.20124*2*pi-9.192631*2*pi+lasDe},
                          {+0.20124*2*pi,0,+lasDe,-9.192631*2*pi+lasDe},
                          {0.20124*2*pi-lasDe,0-lasDe,0,-9.192631*2*pi},
@@ -37,7 +39,7 @@ void fun_Matrix(long double *****,long double **);
 void solve_Martix(long double ***,long double ****,long double ****,long double *);
 void Matrix_Multiply(long double ****,long double ****);
 double phase=0;
-int sweep (int);
+int sweep (int,int);
 
 
 int factorial (int num)
@@ -286,12 +288,15 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
 
 }
 
-int sweep(int steps)
+int sweep(int steps,int total_steps)
 {
 
 
   long double phase=0;
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
+
+
+
   file1.open("inputMP.txt", ios::out | ios::trunc);
   file2.open("dataMP.txt", ios::out | ios::trunc);
   file2.precision(10);
@@ -338,12 +343,11 @@ for(int thread=0;thread<2;thread++)
      }
 /////////////////////////////Sweeping//////////////////////////////////
 
-for(int m=-steps*omp_get_thread_num();m<=steps*(1-omp_get_thread_num());m++)
+for(int m=0;m<=steps;m++)
 {
 
    cout<<m<<endl;
-
-   long double De=m/200.0;
+   long double De=m*(pow(-1,omp_get_thread_num()))*1.0/total_steps;
    long double period=10.878278481971048332082512612548/100*(100+De);
    long double peak=peakO*(100+De)/100;
    long double interval_1=FWHM*10,interval_2=period-interval_1;
@@ -396,18 +400,18 @@ for(int m=-steps*omp_get_thread_num();m<=steps*(1-omp_get_thread_num());m++)
 
               M[k][0][0]=0;
               M[k][0][1]=0;
-              M[k][0][2]=2.61*ReRabi(buffer,period,peak);
-              M[k][0][3]=1.302*ReRabi(buffer,period,peak);
+              M[k][0][2]=0.38188130791298666722*ReRabi(buffer,period,peak);
+              M[k][0][3]=0.27277236279499047658*ReRabi(buffer,period,peak);
               M[k][1][0]=0;
               M[k][1][1]=0;
-              M[k][1][2]=2.269*ReRabi(buffer,period,peak);
-              M[k][1][3]=1.906*ReRabi(buffer,period,peak);
-              M[k][2][0]=2.61*ReRabi(buffer,period,peak);
-              M[k][2][1]=2.269*ReRabi(buffer,period,peak);
+              M[k][1][2]=0.14433756729740644113*ReRabi(buffer,period,peak);
+              M[k][1][3]=0.43301270189221932338*ReRabi(buffer,period,peak);
+              M[k][2][0]=0.38188130791298666722*ReRabi(buffer,period,peak);
+              M[k][2][1]=0.14433756729740644113*ReRabi(buffer,period,peak);
               M[k][2][2]=0;
               M[k][2][3]=0;
-              M[k][3][0]=1.302*ReRabi(buffer,period,peak);
-              M[k][3][1]=1.906*ReRabi(buffer,period,peak);
+              M[k][3][0]=0.27277236279499047658*ReRabi(buffer,period,peak);
+              M[k][3][1]=0.43301270189221932338*ReRabi(buffer,period,peak);
               M[k][3][2]=0;
               M[k][3][3]=0;
            }

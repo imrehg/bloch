@@ -4,7 +4,7 @@ extern int sweep();
 int main()
 {
 
-      sweep(40);
+      sweep(200,20000);
 
 return 0;
 

@@ -11,7 +11,7 @@ using namespace std;
 const long double pi=3.141592654;
 const int npulse=5000,ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 long double period0=10.878278481971048332082512612548;
-long double frequency=0,peakO=37.6834589/2,FWHM=0.001; //frequency:¸üªi¨¤ÀW²v¡Cperoid¡G¯ß½Ä©P´Á¡CFWHM¡G¯ß½Ä¥b°ª¼e¡Cpeak¡G©Ô¤ñÀW²v³Ì¤j­È
+long double frequency=0,peakO=37.6834589/2,FWHM=0.001; //frequency:¸üªi¨¤ÀW²v¡Cperoid¡G¯ß½Ä©P´Á¡CFWHM¡G¯ß½Ä¥b°ª¼e¡Cpeak¡G©Ô¤ñÀW²v³Ì¤j­È(1/2factor due to rotating wave apprx.)
 const int  neq=4,nexp=12,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 long double r[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//total decay constant
 long double R[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//relaxation rate
