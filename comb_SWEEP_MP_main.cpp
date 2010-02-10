@@ -3,8 +3,8 @@ extern int sweep();
 
 int main()
 {
-    for(int i=0;i<10;i++)
-      sweep(200,1000,150*pow(2,i));
+    for(int i=-5;i<5;i++)
+      sweep(200,1000,10000+i*500);//last parameter is power uW/cm2
 
 return 0;
 

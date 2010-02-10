@@ -11,9 +11,9 @@
 #include <omp.h>//For openmp
 using namespace std;
 const long double pi=3.141592654;
-const int npulse=5000,ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
+const int npulse=50000,ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 long double period0=10.87827848197104833208251261254802895928271242476719;
-long double frequency=0,peakO=0.91354/2,FWHM=0.001; //about 150uW/cm2
+long double frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
 const int  neq=4,nexp=12,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 long double r[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//total decay constant
 long double R[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//relaxation rate
@@ -295,7 +295,7 @@ int sweep(int steps,int total_steps,long double PeakPower)
   long double phase=0;
 
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
-  peakO = PeakPower/150*0.91354/2;
+  peakO = PeakPower/150*1.34163815218652164669542605053/2;
   stringstream strstream;
   string filename;
   strstream<<PeakPower<<"umW_cm2.txt";
