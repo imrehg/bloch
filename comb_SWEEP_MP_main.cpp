@@ -3,9 +3,10 @@ extern int sweep();
 
 int main()
 {
-//
-//    for(int i=0;i<5;i++)
-      sweep(100,1000000,150,1/pow(10,16),20,200,600);//sweep steps, total steps, power(uW/cm2),convergence condition,ADM order,n1 interval,n2 interval
+
+    for(int i=-10;i<10;i++)
+      sweep(10,100000,2000,1/pow(10,12),20,200,600,0.0087*i/5*2*pi);
+      //sweep steps, total steps, power(uW/cm2),convergence condition,ADM order,n1 interval,n2 interval,laser detune
 
 return 0;
 
