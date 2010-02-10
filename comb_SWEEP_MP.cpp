@@ -11,10 +11,12 @@
 #include <omp.h>//For openmp
 using namespace std;
 const long double pi=3.141592654;
-const int npulse=50000,ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
+const int npulse=50000;
+int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 long double period0=10.87827848197104833208251261254802895928271242476719;
 long double frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
-const int  neq=4,nexp=12,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
+const int  neq=4,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
+int nexp=12;
 long double r[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//total decay constant
 long double R[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//relaxation rate
 long double Rc[neq][neq]={{0,0,0,0},
@@ -39,7 +41,7 @@ void fun_Matrix(long double *****,long double **);
 void solve_Martix(long double ***,long double ****,long double ****,long double *);
 void Matrix_Multiply(long double ****,long double ****);
 double phase=0;
-int sweep (int,int,long double);
+int sweep (int,int,long double,long double,int);
 
 
 int factorial (int num)
@@ -288,22 +290,24 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
 
 }
 
-int sweep(int steps,int total_steps,long double PeakPower)
+int sweep(int steps,int total_steps,long double PeakPower,long double convergence,int expN,int n1, int n2)
 {
 
 
   long double phase=0;
-
+  ninterval_1 =n1;
+  ninterval_2 =n2;
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
   peakO = PeakPower/150*1.34163815218652164669542605053/2;
+  nexp=expN;
   stringstream strstream;
   string filename;
-  strstream<<PeakPower<<"umW_cm2.txt";
+  strstream<<PeakPower<<"uW_cm2_"<<convergence<<"_O="<<nexp<<"N1_"<<n1<<"N2_"<<n2<<".txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
   file1.open("inputMP.txt", ios::out | ios::trunc);
-  file2.precision(10);
+  file2.precision(15);
 
 
 #pragma omp num_threads(1)
@@ -442,7 +446,7 @@ while(flag<pulse_average){
 
       if(k>pulse_average){
           diff=presultR[k][0][0]-presultR[k-pulse_average][0][0];
-        if(abs(diff)<0.000001)
+        if(abs(diff)<convergence)
          flag+=1;
         else
          flag=0;
@@ -463,10 +467,10 @@ long double buffer=0;
 
 buffer=buffer/(ninterval_1+ninterval_2+1);
 
-       file2<<setiosflags(ios::left)<<setw(20)<<1/period;
-       file2<<setiosflags(ios::left)<<setw(20)<<buffer;
-       file2<<setiosflags(ios::left)<<setw(20)<<k;
-       file2<<setiosflags(ios::left)<<setw(20)<<m<<endl;
+       file2<<setiosflags(ios::left)<<setw(30)<<1/period;
+       file2<<setiosflags(ios::left)<<setw(30)<<buffer;
+       file2<<setiosflags(ios::left)<<setw(30)<<k;
+       file2<<setiosflags(ios::left)<<setw(30)<<m<<endl;
 
 }
 
