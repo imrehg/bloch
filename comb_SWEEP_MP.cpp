@@ -26,6 +26,10 @@ long double Rc[neq][neq]={{0,0,0,0},
 long double A[neq][neq]={{0,0,0,0},{0,0,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0}};//Einstein A coefficient
 long double R_L[neq]={0,0,0,0};//laser line width
 long double lasDe = 0;
+long double d0[neq][neq]={{0,-0.20124*2*pi,-0.20124*2*pi+lasDe,-0.20124*2*pi-9.192631*2*pi+lasDe},
+                         {+0.20124*2*pi,0,+lasDe,-9.192631*2*pi+lasDe},
+                         {0.20124*2*pi-lasDe,0-lasDe,0,-9.192631*2*pi},
+                         {+9.192631*2*pi+0.20124*2*pi-lasDe,+9.192631*2*pi-lasDe,9.192631*2*pi,0}};//laser */
 long double d[neq][neq]={{0,-0.20124*2*pi,-0.20124*2*pi+lasDe,-0.20124*2*pi-9.192631*2*pi+lasDe},
                          {+0.20124*2*pi,0,+lasDe,-9.192631*2*pi+lasDe},
                          {0.20124*2*pi-lasDe,0-lasDe,0,-9.192631*2*pi},
@@ -293,14 +297,14 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
 void adj_detune(long double detune)
 {
 
- d[0][2]=d[0][2]+detune;
- d[0][3]=d[0][3]+detune;
- d[1][2]=d[1][2]+detune;
- d[1][3]=d[1][3]+detune;
- d[2][0]=d[2][0]-detune;
- d[3][0]=d[3][0]-detune;
- d[2][1]=d[2][1]-detune;
- d[3][1]=d[3][1]-detune;
+ d[0][2]=d0[0][2]+detune;
+ d[0][3]=d0[0][3]+detune;
+ d[1][2]=d0[1][2]+detune;
+ d[1][3]=d0[1][3]+detune;
+ d[2][0]=d0[2][0]-detune;
+ d[3][0]=d0[3][0]-detune;
+ d[2][1]=d0[2][1]-detune;
+ d[3][1]=d0[3][1]-detune;
 
 }
 
