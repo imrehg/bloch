@@ -11,7 +11,7 @@
 #include <omp.h>//For openmp
 using namespace std;
 const long double pi=3.14159265358979323846264338327950288419716939937511;
-const int npulse=500000;
+const int npulse=50000;
 int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 long double period0=10.87827848197104833208251261254802895928271242476719;
 long double frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
@@ -316,7 +316,7 @@ int sweep(int steps,int total_steps,long double PeakPower,long double convergenc
   nexp=expN;
   stringstream strstream;
   string filename;
-  strstream<<PeakPower<<"uW_cm2_"<<convergence<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_De_"<<detune<<".txt";
+  strstream<<PeakPower<<"uWcm2_"<<convergence<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune*100<<".txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
@@ -511,6 +511,34 @@ buffer=buffer/(ninterval_1+ninterval_2+1);
      }
       delete[] Trans;
       delete[] Trans_AVE;
+
+
+      for(int i=0;i<npulse;i++)
+         for(int j=0;j<neq;j++){
+               delete[] presultI[i][j];
+               delete[] presultR[i][j];
+       }
+
+        for(int i=0;i<npulse;i++){
+               delete[] presultI[i];
+               delete[] presultR[i];
+       }
+
+       delete[] presultI;
+       delete[] presultR;
+
+       for(int i=0;i<ninterval_1+ninterval_2+1;i++)
+         for(int j=0;j<neq;j++){
+               delete[] M[i][j];
+       }
+
+       for(int i=0;i<ninterval_1+ninterval_2+1;i++)
+               delete[] M[i];
+
+      delete[] Time;
+      delete[] M;
+
+
 
 }
 
