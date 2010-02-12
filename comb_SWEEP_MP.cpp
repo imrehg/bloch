@@ -11,7 +11,7 @@
 #include <omp.h>//For openmp
 using namespace std;
 const long double pi=3.14159265358979323846264338327950288419716939937511;
-const int npulse=50000;
+const int npulse=500000000;
 int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 long double period0=10.87827848197104833208251261254802895928271242476719;
 long double frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
@@ -21,8 +21,8 @@ long double r[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//total decay constant
 long double R[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//relaxation rate
 long double Rc[neq][neq]={{0,0,0,0},
                           {0,0,0,0},
-                          {0,0,0,0},
-                          {0,0,0,0}};//coherence relaxation rate
+                          {0,0,0,0.0000005*2*pi},
+                          {0,0,0.0000005*2*pi,0}};//coherence relaxation rate
 long double A[neq][neq]={{0,0,0,0},{0,0,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0}};//Einstein A coefficient
 long double R_L[neq]={0,0,0,0};//laser line width
 long double lasDe = 0;
@@ -45,6 +45,7 @@ void fun_Matrix(long double *****,long double **);
 void solve_Martix(long double ***,long double ****,long double ****,long double *);
 void Matrix_Multiply(long double ****,long double ****);
 double phase=0;
+ int pulse_average=100;
 int sweep (int,int,long double,long double,int,long double);
 
 
@@ -320,7 +321,7 @@ int sweep(int steps,int total_steps,long double PeakPower,long double convergenc
   nexp=expN;
   stringstream strstream;
   string filename;
-  strstream<<PeakPower<<"uWcm2_"<<convergence<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune*100<<".txt";
+  strstream<<PeakPower<<"uWcm2_"<<convergence<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz.txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
@@ -355,15 +356,15 @@ for(int thread=0;thread<2;thread++)
            }
      }
     }
-    long double ***presultR= new long double**[npulse];//所有時間點的數值存於此指標(real)
-      for(int i=0;i<npulse;i++){
+    long double ***presultR= new long double**[pulse_average+1];//所有時間點的數值存於此指標(real)
+      for(int i=0;i<pulse_average+1;i++){
           presultR[i]=new long double*[neq];
           for(int j=0;j<neq;j++){
               presultR[i][j]=new long double[neq];
            }
      }
-   long double ***presultI= new long double**[npulse];//所有時間點的數值存於此指標(imaginary) presultI[][o][o]為時間參數
-      for(int i=0;i<npulse;i++){
+   long double ***presultI= new long double**[pulse_average+1];//所有時間點的數值存於此指標(imaginary) presultI[][o][o]為時間參數
+      for(int i=0;i<pulse_average+1;i++){
           presultI[i]=new long double*[neq];
           for(int j=0;j<neq;j++){
               presultI[i][j]=new long double[neq];
@@ -383,7 +384,7 @@ for(int m=0;m<=steps;m++)
    interval_2=period-interval_1;
    dt_2=interval_2/ninterval_2;
 
-  for (int i=0;i<npulse;i++){
+  for (int i=0;i<(pulse_average+1);i++){
         for (int k=0;k<neq;k++){
             for (int l=0;l<neq;l++){
                     presultI[i][k][l]=0;
@@ -448,22 +449,31 @@ solve_Martix(M,Trans,Trans_AVE,Time);
 
  int k=0,flag=0;
  double diff=0;
- int pulse_average=100;
+
 
 while(flag<pulse_average){
 
+
+
+
+
+
+
      for(int a=0;a<neq;a++)
-           for(int b=0;b<neq;b++)
+           for(int b=0;b<neq;b++){
+           presultI[(k+1)%(pulse_average+1)][a][b]=0;
+           presultR[(k+1)%(pulse_average+1)][a][b]=0;
              for(int c=0;c<neq;c++)
                  for(int d=0;d<neq;d++){
-                  presultI[k+1][a][b]+=Trans[a+neq][b][c][d]*presultR[k][c][d]+Trans[a+neq][b][c+neq][d]*presultI[k][c][d];
-                  presultR[k+1][a][b]+=Trans[a][b][c][d]*presultR[k][c][d]+Trans[a][b][c+neq][d]*presultI[k][c][d];
-                 }
+                  presultI[(k+1)%(pulse_average+1)][a][b]+=Trans[a+neq][b][c][d]*presultR[k%(pulse_average+1)][c][d]+Trans[a+neq][b][c+neq][d]*presultI[k%(pulse_average+1)][c][d];
+                  presultR[(k+1)%(pulse_average+1)][a][b]+=Trans[a][b][c][d]*presultR[k%(pulse_average+1)][c][d]+Trans[a][b][c+neq][d]*presultI[k%(pulse_average+1)][c][d];
+                 }}
+
 
     k+=1;
 
       if(k>pulse_average){
-          diff=presultR[k][0][0]-presultR[k-pulse_average][0][0];
+          diff=presultR[k%(pulse_average+1)][0][0]-presultR[(k-pulse_average)%(pulse_average+1)][0][0];
         if(abs(diff)<convergence)
          flag+=1;
         else
@@ -479,8 +489,8 @@ long double buffer=0;
 
              for(int c=0;c<neq;c++)
                  for(int d=0;d<neq;d++){
-                  buffer+=Trans_AVE[0][0][c][d]*presultR[k][c][d]+Trans_AVE[0][0][c+neq][d]*presultI[k][c][d];
-                  buffer+=Trans_AVE[1][1][c][d]*presultR[k][c][d]+Trans_AVE[1][1][c+neq][d]*presultI[k][c][d];
+                  buffer+=Trans_AVE[0][0][c][d]*presultR[k%(pulse_average+1)][c][d]+Trans_AVE[0][0][c+neq][d]*presultI[k%(pulse_average+1)][c][d];
+                  buffer+=Trans_AVE[1][1][c][d]*presultR[k%(pulse_average+1)][c][d]+Trans_AVE[1][1][c+neq][d]*presultI[k%(pulse_average+1)][c][d];
                  }
 
 buffer=buffer/(ninterval_1+ninterval_2+1);
@@ -517,13 +527,13 @@ buffer=buffer/(ninterval_1+ninterval_2+1);
       delete[] Trans_AVE;
 
 
-      for(int i=0;i<npulse;i++)
+      for(int i=0;i<pulse_average+1;i++)
          for(int j=0;j<neq;j++){
                delete[] presultI[i][j];
                delete[] presultR[i][j];
        }
 
-        for(int i=0;i<npulse;i++){
+        for(int i=0;i<pulse_average+1;i++){
                delete[] presultI[i];
                delete[] presultR[i];
        }

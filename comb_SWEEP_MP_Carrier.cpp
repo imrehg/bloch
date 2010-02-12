@@ -3,24 +3,37 @@
 //#include <cstdlib> //
 //#include <cctype>
 //#include <cstring>
+#include <string>//to use string
+#include <sstream>//to use sstream
 #include <cmath>//For sin cos functions
 #include <iomanip>//For  setiosflags
 #include <ctime>//For timer
 #include <omp.h>//For openmp
 using namespace std;
-const long double pi=3.141592654;
-const int npulse=5000,ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
-long double period0=10.878278481971048332082512612548;
-long double frequency=0,peakO=37.6834589/2,FWHM=0.001; //frequency:¸üªi¨¤ÀW²v¡Cperoid¡G¯ß½Ä©P´Á¡CFWHM¡G¯ß½Ä¥b°ª¼e¡Cpeak¡G©Ô¤ñÀW²v³Ì¤j­È(1/2factor due to rotating wave apprx.)
-const int  neq=4,nexp=12,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
+const long double pi=3.14159265358979323846264338327950288419716939937511;
+const int npulse=50000000;
+int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
+long double period0=10.87827848197104833208251261254802895928271242476719;
+long double frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
+const int  neq=4,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
+int nexp=12;
 long double r[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//total decay constant
 long double R[neq]={0.0052227*2*pi,0.0052227*2*pi,0,0};//relaxation rate
+long double Rc[neq][neq]={{0,0,0,0},
+                          {0,0,0,0},
+                          {0,0,0,0.0000005*2*pi},
+                          {0,0,0.0000005*2*pi,0}};//coherence relaxation rate
 long double A[neq][neq]={{0,0,0,0},{0,0,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0}};//Einstein A coefficient
 long double R_L[neq]={0,0,0,0};//laser line width
-long double d[neq][neq]={{0,0,0,-0.20124*2*pi-9.192631*2*pi},
-                         {0,0,0,-9.192631*2*pi},
-                         {0,0,0,-9.192631*2*pi},
-                         {+9.192631*2*pi,9.192631*2*pi,9.192631*2*pi,0}};//laser */
+long double lasDe = 0;
+long double d0[neq][neq]={{0,-0.20124*2*pi,-0.20124*2*pi+lasDe,-0.20124*2*pi-9.192631*2*pi+lasDe},
+                         {+0.20124*2*pi,0,+lasDe,-9.192631*2*pi+lasDe},
+                         {0.20124*2*pi-lasDe,0-lasDe,0,-9.192631*2*pi},
+                         {+9.192631*2*pi+0.20124*2*pi-lasDe,+9.192631*2*pi-lasDe,9.192631*2*pi,0}};//laser */
+long double d[neq][neq]={{0,-0.20124*2*pi,-0.20124*2*pi+lasDe,-0.20124*2*pi-9.192631*2*pi+lasDe},
+                         {+0.20124*2*pi,0,+lasDe,-9.192631*2*pi+lasDe},
+                         {0.20124*2*pi-lasDe,0-lasDe,0,-9.192631*2*pi},
+                         {+9.192631*2*pi+0.20124*2*pi-lasDe,+9.192631*2*pi-lasDe,9.192631*2*pi,0}};//laser */
 long double y0I[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};//initial condition
 long double y0R[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0.5,0},{0,0,0,0.5}};//initial condiion
 void fun(long double ***,long double ***,long double **,int );//Áp¥ß¤èµ{¦¡
@@ -29,9 +42,11 @@ long double ReRabi(long double,long double,long double );//¯ß½Ä¥]µ¸½u¨ç¼Æ(¹ê³¡)
 long double ImRabi(long double,long double,long double );//¯ß½Ä¥]µ¸½u¨ç¼Æ(µê³¡)
 int factorial (int);
 void fun_Matrix(long double *****,long double **);
-void solve_Martix(long double ***,long double ****,long double ****,long double *,long double ****);
-void Matrix_Multiply(long double ****,long double ****,long double ****);
+void solve_Martix(long double ***,long double ****,long double ****,long double *);
+void Matrix_Multiply(long double ****,long double ****);
 double phase=0;
+ int pulse_average=100;
+int sweep (int,int,long double,long double,int,long double);
 
 
 int factorial (int num)
@@ -70,10 +85,24 @@ long double ImRabi(long double x,long double period,long double peak)//¯ß½Ä¥]µ¸½
   return peak*value;
 }
 
-void Matrix_Multiply(long double ****A,long double ****B,long double ****C)//A=B*A ;C:Buffer
+void Matrix_Multiply(long double ****A,long double ****B)//A=B*A ;C:Buffer
 {
+      long double ****C= new long double***[neq*2];
 
-     for(int a=0;a<neq;a++){
+      for(int i=0;i<neq;i++){
+         C[i]=new long double**[neq];
+         C[i+neq]=new long double**[neq];
+           for(int j=0;j<neq;j++){
+              C[i][j]=new long double*[neq*2];
+              C[i+neq][j]=new long double*[neq*2];
+                for(int k=0;k<neq*2;k++){
+                   C[i][j][k]=new long double[neq];
+                   C[i+neq][j][k]=new long double[neq];
+             }
+          }
+       }
+
+      for(int a=0;a<neq;a++){
            for(int b=0;b<=a;b++)
              for(int c=0;c<neq;c++)
                  for(int d=0;d<neq;d++){
@@ -110,6 +139,30 @@ void Matrix_Multiply(long double ****A,long double ****B,long double ****C)//A=B
                             A[b][a][c][d]=C[a][b][c][d];
                             }//M'=M(t)*M
 
+    for(int i=0;i<neq;i++)
+        for(int j=0;j<neq;j++)
+            for(int k=0;k<neq;k++){
+                  delete[] C[i+neq][j][k];
+                  delete[] C[i][j][k];
+                  delete[] C[i+neq][j][k+neq];
+                  delete[] C[i][j][k+neq];
+            }
+
+     for(int i=0;i<neq;i++)
+         for(int j=0;j<neq;j++){
+               delete[] C[i][j];
+               delete[] C[i+neq][j];
+         }
+
+     for(int i=0;i<neq;i++){
+               delete[] C[i];
+               delete[] C[i+neq];
+     }
+
+      delete[] C;
+
+
+
 }
 
 void fun_Matrix(long double ****Trans,long double **H)//B imaginary part ; C real part; H rabi requence; w time
@@ -125,7 +178,7 @@ void fun_Matrix(long double ****Trans,long double **H)//B imaginary part ; C rea
 
  for (int i=1;i<neq;i++){
     for (int j=0;j<i;j++){
-       Trans[i][j][i][j]=-(R[i]+R[j]+R_L[i])/2;
+       Trans[i][j][i][j]=-(R[i]+R[j]+R_L[i])/2-Rc[i][j];
        Trans[i][j][i+neq][j]=d[i][j];
        for (int l=0;l<neq;l++){
              Trans[i][j][l+neq][j]+=-H[i][l];
@@ -140,7 +193,7 @@ void fun_Matrix(long double ****Trans,long double **H)//B imaginary part ; C rea
 
  for (int i=1;i<neq;i++){
    for (int j=0;j<i;j++){
-       Trans[i+neq][j][i+neq][j]=-(R[i]+R[j]+R_L[i])/2;
+       Trans[i+neq][j][i+neq][j]=-(R[i]+R[j]+R_L[i])/2-Rc[i][j];
        Trans[i+neq][j][i][j]=-d[i][j];
       for (int l=0;l<neq;l++){
             Trans[i+neq][j][l][j]+=H[i][l];
@@ -153,7 +206,7 @@ void fun_Matrix(long double ****Trans,long double **H)//B imaginary part ; C rea
   }    //  Bloch eq for off diagonal imaginary part
 }
 
-void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_Ave,long double *T,long double ****C)// solve(presultI,presultR,M,k)
+void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_Ave,long double *T)// solve(presultI,presultR,M,k)
 {
      long double ****Trans_B= new long double***[neq*2],****Trans_E=new long double***[neq*2],****Trans_I=new long double***[neq*2];
 
@@ -193,7 +246,7 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
       fun_Matrix(Trans_E,M[t-1]);
 
       for(int j=1;j<=nexp;j++){
-        Matrix_Multiply(Trans_I,Trans_E,C);
+        Matrix_Multiply(Trans_I,Trans_E);
          for(int a=0;a<2*neq;a++)
            for(int b=0;b<neq;b++)
              for(int c=0;c<2*neq;c++)
@@ -208,7 +261,7 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
                  for(int d=0;d<neq;d++)
                       Trans_Ave[a][b][c][d]+=Trans_B[a][b][c][d];
 
-      Matrix_Multiply(Trans,Trans_B,C);
+      Matrix_Multiply(Trans,Trans_B);
 
       }
 
@@ -242,47 +295,42 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
 
 }
 
-int main()
+void adj_detune(long double detune)
 {
 
-  double start=omp_get_wtime();
+ d[0][2]=d0[0][2]+detune;
+ d[0][3]=d0[0][3]+detune;
+ d[1][2]=d0[1][2]+detune;
+ d[1][3]=d0[1][3]+detune;
+ d[2][0]=d0[2][0]-detune;
+ d[3][0]=d0[3][0]-detune;
+ d[2][1]=d0[2][1]-detune;
+ d[3][1]=d0[3][1]-detune;
+
+}
+
+int sweep(int steps,int total_steps,long double PeakPower,long double convergence,int expN,int n1, int n2,long double detune)
+{
+
+
   long double phase=0;
-  fstream file1,file2;
+  ninterval_1 =n1;
+  ninterval_2 =n2;
+  fstream file1,file2;//file1:¬ö¿ý¿é¤Jªº°Ñ¼Æ¡Cfile2://¬ö¿ý­pºâµ²ªG
+  peakO = PeakPower/150*1.34163815218652164669542605053/2;
+  nexp=expN;
+  stringstream strstream;
+  string filename;
+  strstream<<"Car_"<<PeakPower<<"uWcm2_"<<convergence<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<".txt";
+  strstream>>filename;
+  cout<<filename.c_str()<<endl;
+  file2.open(filename.c_str(),ios::out | ios::trunc);
   file1.open("inputMP.txt", ios::out | ios::trunc);
-  file2.open("dataMP.txt", ios::out | ios::trunc);
-  file2.precision(10);
+  file2.precision(15);
 
-#pragma omp parallel for
-for(int thread=0;thread<2;thread++)
-{
+
    long double *Time= new long double[ninterval_1+ninterval_2+1];
    long double ***M= new long double**[ninterval_1+ninterval_2+1];//Rabifrequence*2
-   long double ****C= new long double***[neq*2];//matrix buffer
-
-      for(int i=0;i<neq;i++){
-         C[i]=new long double**[neq];
-         C[i+neq]=new long double**[neq];
-           for(int j=0;j<neq;j++){
-              C[i][j]=new long double*[neq*2];
-              C[i+neq][j]=new long double*[neq*2];
-                for(int k=0;k<neq*2;k++){
-                   C[i][j][k]=new long double[neq];
-                   C[i+neq][j][k]=new long double[neq];
-             }
-          }
-       }
-
-    for(int a=0;a<neq;a++)
-           for(int b=0;b<=a;b++)
-             for(int c=0;c<neq;c++)
-                 for(int d=0;d<neq;d++){
-                     C[a+neq][b][c][d]=0;
-                     C[a+neq][b][c+neq][d]=0;
-                     C[a][b][c+neq][d]=0;
-                     C[a][b][c][d]=0;
-                 }
-
-
 
       for(int i=0;i<(ninterval_1+ninterval_2+1);i++){
           M[i]=new long double*[neq];
@@ -304,15 +352,15 @@ for(int thread=0;thread<2;thread++)
            }
      }
     }
-    long double ***presultR= new long double**[npulse];//©Ò¦³®É¶¡ÂIªº¼Æ­È¦s©ó¦¹«ü¼Ð(real)
-      for(int i=0;i<npulse;i++){
+    long double ***presultR= new long double**[pulse_average+1];//©Ò¦³®É¶¡ÂIªº¼Æ­È¦s©ó¦¹«ü¼Ð(real)
+      for(int i=0;i<pulse_average+1;i++){
           presultR[i]=new long double*[neq];
           for(int j=0;j<neq;j++){
               presultR[i][j]=new long double[neq];
            }
      }
-   long double ***presultI= new long double**[npulse];//©Ò¦³®É¶¡ÂIªº¼Æ­È¦s©ó¦¹«ü¼Ð(imaginary) presultI[][o][o]¬°®É¶¡°Ñ¼Æ
-      for(int i=0;i<npulse;i++){
+   long double ***presultI= new long double**[pulse_average+1];//©Ò¦³®É¶¡ÂIªº¼Æ­È¦s©ó¦¹«ü¼Ð(imaginary) presultI[][o][o]¬°®É¶¡°Ñ¼Æ
+      for(int i=0;i<pulse_average+1;i++){
           presultI[i]=new long double*[neq];
           for(int j=0;j<neq;j++){
               presultI[i][j]=new long double[neq];
@@ -320,12 +368,12 @@ for(int thread=0;thread<2;thread++)
      }
 /////////////////////////////Sweeping//////////////////////////////////
 
-for(int m=-20*omp_get_thread_num();m<=20*(1-omp_get_thread_num());m++)
+for(int m=-steps;m<=steps;m++)
 {
 
    cout<<m<<endl;
-
-   long double De=m/200.0;
+   long double De=0;
+   adj_detune(detune*m*(pow(-1,omp_get_thread_num()))*1.0/total_steps);
    long double period=10.878278481971048332082512612548/100*(100+De);
    long double peak=peakO*(100+De)/100;
    long double interval_1=FWHM*10,interval_2=period-interval_1;
@@ -333,7 +381,7 @@ for(int m=-20*omp_get_thread_num();m<=20*(1-omp_get_thread_num());m++)
    interval_2=period-interval_1;
    dt_2=interval_2/ninterval_2;
 
-  for (int i=0;i<npulse;i++){
+  for (int i=0;i<(pulse_average+1);i++){
         for (int k=0;k<neq;k++){
             for (int l=0;l<neq;l++){
                     presultI[i][k][l]=0;
@@ -378,43 +426,52 @@ for(int m=-20*omp_get_thread_num();m<=20*(1-omp_get_thread_num());m++)
 
               M[k][0][0]=0;
               M[k][0][1]=0;
-              M[k][0][2]=-2.269*ReRabi(buffer,period,peak);
-              M[k][0][3]=1.906*ReRabi(buffer,period,peak);
+              M[k][0][2]=0.38188130791298666722*ReRabi(buffer,period,peak);
+              M[k][0][3]=0.27277236279499047658*ReRabi(buffer,period,peak);
               M[k][1][0]=0;
               M[k][1][1]=0;
-              M[k][1][2]=2.269*ReRabi(buffer,period,peak);
-              M[k][1][3]=1.906*ReRabi(buffer,period,peak);
-              M[k][2][0]=-2.269*ReRabi(buffer,period,peak);
-              M[k][2][1]=2.269*ReRabi(buffer,period,peak);
+              M[k][1][2]=0.14433756729740644113*ReRabi(buffer,period,peak);
+              M[k][1][3]=0.43301270189221932338*ReRabi(buffer,period,peak);
+              M[k][2][0]=0.38188130791298666722*ReRabi(buffer,period,peak);
+              M[k][2][1]=0.14433756729740644113*ReRabi(buffer,period,peak);
               M[k][2][2]=0;
               M[k][2][3]=0;
-              M[k][3][0]=1.906*ReRabi(buffer,period,peak);
-              M[k][3][1]=1.906*ReRabi(buffer,period,peak);
+              M[k][3][0]=0.27277236279499047658*ReRabi(buffer,period,peak);
+              M[k][3][1]=0.43301270189221932338*ReRabi(buffer,period,peak);
               M[k][3][2]=0;
               M[k][3][3]=0;
            }
 
-solve_Martix(M,Trans,Trans_AVE,Time,C);
+solve_Martix(M,Trans,Trans_AVE,Time);
 
  int k=0,flag=0;
  double diff=0;
- int pulse_average=100;
+
 
 while(flag<pulse_average){
 
+
+
+
+
+
+
      for(int a=0;a<neq;a++)
-           for(int b=0;b<neq;b++)
+           for(int b=0;b<neq;b++){
+           presultI[(k+1)%(pulse_average+1)][a][b]=0;
+           presultR[(k+1)%(pulse_average+1)][a][b]=0;
              for(int c=0;c<neq;c++)
                  for(int d=0;d<neq;d++){
-                  presultI[k+1][a][b]+=Trans[a+neq][b][c][d]*presultR[k][c][d]+Trans[a+neq][b][c+neq][d]*presultI[k][c][d];
-                  presultR[k+1][a][b]+=Trans[a][b][c][d]*presultR[k][c][d]+Trans[a][b][c+neq][d]*presultI[k][c][d];
-                 }
+                  presultI[(k+1)%(pulse_average+1)][a][b]+=Trans[a+neq][b][c][d]*presultR[k%(pulse_average+1)][c][d]+Trans[a+neq][b][c+neq][d]*presultI[k%(pulse_average+1)][c][d];
+                  presultR[(k+1)%(pulse_average+1)][a][b]+=Trans[a][b][c][d]*presultR[k%(pulse_average+1)][c][d]+Trans[a][b][c+neq][d]*presultI[k%(pulse_average+1)][c][d];
+                 }}
+
 
     k+=1;
 
       if(k>pulse_average){
-          diff=presultR[k][0][0]-presultR[k-pulse_average][0][0];
-        if(abs(diff)<0.000001)
+          diff=presultR[k%(pulse_average+1)][0][0]-presultR[(k-pulse_average)%(pulse_average+1)][0][0];
+        if(abs(diff)<convergence)
          flag+=1;
         else
          flag=0;
@@ -429,16 +486,16 @@ long double buffer=0;
 
              for(int c=0;c<neq;c++)
                  for(int d=0;d<neq;d++){
-                  buffer+=Trans_AVE[0][0][c][d]*presultR[k][c][d]+Trans_AVE[0][0][c+neq][d]*presultI[k][c][d];
-                  buffer+=Trans_AVE[1][1][c][d]*presultR[k][c][d]+Trans_AVE[1][1][c+neq][d]*presultI[k][c][d];
+                  buffer+=Trans_AVE[0][0][c][d]*presultR[k%(pulse_average+1)][c][d]+Trans_AVE[0][0][c+neq][d]*presultI[k%(pulse_average+1)][c][d];
+                  buffer+=Trans_AVE[1][1][c][d]*presultR[k%(pulse_average+1)][c][d]+Trans_AVE[1][1][c+neq][d]*presultI[k%(pulse_average+1)][c][d];
                  }
 
 buffer=buffer/(ninterval_1+ninterval_2+1);
 
-       file2<<setiosflags(ios::left)<<setw(20)<<1/period;
-       file2<<setiosflags(ios::left)<<setw(20)<<buffer;
-       file2<<setiosflags(ios::left)<<setw(20)<<k;
-       file2<<setiosflags(ios::left)<<setw(20)<<m<<endl;
+       file2<<setiosflags(ios::left)<<setw(30)<<detune*m*(pow(-1,omp_get_thread_num()))*1.0/total_steps/2/pi*1000;
+       file2<<setiosflags(ios::left)<<setw(30)<<buffer;
+       file2<<setiosflags(ios::left)<<setw(30)<<k;
+       file2<<setiosflags(ios::left)<<setw(30)<<m<<endl;
 
 }
 
@@ -466,33 +523,39 @@ buffer=buffer/(ninterval_1+ninterval_2+1);
       delete[] Trans;
       delete[] Trans_AVE;
 
-         for(int i=0;i<neq;i++)
-        for(int j=0;j<neq;j++)
-            for(int k=0;k<neq;k++){
-                  delete[] C[i+neq][j][k];
-                  delete[] C[i][j][k];
-                  delete[] C[i+neq][j][k+neq];
-                  delete[] C[i][j][k+neq];
-            }
 
-     for(int i=0;i<neq;i++)
+      for(int i=0;i<pulse_average+1;i++)
          for(int j=0;j<neq;j++){
-               delete[] C[i][j];
-               delete[] C[i+neq][j];
-         }
+               delete[] presultI[i][j];
+               delete[] presultR[i][j];
+       }
 
-     for(int i=0;i<neq;i++){
-               delete[] C[i];
-               delete[] C[i+neq];
-     }
+        for(int i=0;i<pulse_average+1;i++){
+               delete[] presultI[i];
+               delete[] presultR[i];
+       }
 
-      delete[] C;
+       delete[] presultI;
+       delete[] presultR;
 
-}
+       for(int i=0;i<ninterval_1+ninterval_2+1;i++)
+         for(int j=0;j<neq;j++){
+               delete[] M[i][j];
+       }
 
-  cout<<"time spent:"<<(omp_get_wtime()-start)<<"sec";
+       for(int i=0;i<ninterval_1+ninterval_2+1;i++)
+               delete[] M[i];
+
+      delete[] Time;
+      delete[] M;
+
+
+
+
 
   return 0;
+
+
 
 
 }
