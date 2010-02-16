@@ -449,7 +449,7 @@ for(int m=0;m<=steps;m++)
 solve_Martix(M,Trans,Trans_AVE,Time);
 
  int k=0,flag=0;
- double diff=1;
+ double diff=0,diff0=0;
 
 
 while(flag<pulse_average){
@@ -469,13 +469,20 @@ while(flag<pulse_average){
     k+=1;
 
       if(k>pulse_average){
-          diff=1;
+          diff0=0;
           for(int c=0;c<neq;c++)
-          diff=diff*presultR[k%(pulse_average+1)][c][c]/presultR[(k-pulse_average)%(pulse_average+1)][c][c];
-        if(abs(diff)>(1.0-convergence))
-         flag+=1;
-        else
-         flag=0;
+          diff0=diff0+abs((1-presultR[k%(pulse_average+1)][c][c]/presultR[(k-pulse_average)%(pulse_average+1)][c][c]))/neq;
+
+        if(diff0<diff){
+           if(abs(diff)<(convergence))
+              flag+=1;
+           else
+             flag=0;}
+         else
+            flag=0;
+
+         diff=diff0;
+
       }
 
      if(k==(npulse-1))
