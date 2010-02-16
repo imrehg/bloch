@@ -46,7 +46,7 @@ void solve_Martix(long double ***,long double ****,long double ****,long double 
 void Matrix_Multiply(long double ****,long double ****);
 double phase=0;
  int pulse_average=100;
-int sweep (int,int,long double,long double,int,long double);
+int sweep (int,int,long double,long double,int,int,long double);
 
 
 int factorial (int num)
@@ -309,7 +309,7 @@ void adj_detune(long double detune)
 
 }
 
-int sweep(int steps,int total_steps,long double PeakPower,long double convergence,int expN,int n1, int n2,long double detune)
+int sweep(int steps,int total_steps,long double PeakPower,long double convergence,int conS,int expN,int n1, int n2,long double detune)
 {
 
 
@@ -321,13 +321,14 @@ int sweep(int steps,int total_steps,long double PeakPower,long double convergenc
   nexp=expN;
   stringstream strstream;
   string filename;
-  strstream<<PeakPower<<"uWcm2_"<<convergence<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz.txt";
+  strstream<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz.txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
   file1.open("inputMP.txt", ios::out | ios::trunc);
   file2.precision(15);
   adj_detune(detune);
+  pulse_average=conS;
 
 #pragma omp num_threads(1)
 #pragma omp parallel for
@@ -448,15 +449,10 @@ for(int m=0;m<=steps;m++)
 solve_Martix(M,Trans,Trans_AVE,Time);
 
  int k=0,flag=0;
- double diff=0;
+ double diff=1;
 
 
 while(flag<pulse_average){
-
-
-
-
-
 
 
      for(int a=0;a<neq;a++)
@@ -473,8 +469,10 @@ while(flag<pulse_average){
     k+=1;
 
       if(k>pulse_average){
-          diff=presultR[k%(pulse_average+1)][0][0]-presultR[(k-pulse_average)%(pulse_average+1)][0][0];
-        if(abs(diff)<convergence)
+          diff=1;
+          for(int c=0;c<neq;c++)
+          diff=diff*presultR[k%(pulse_average+1)][c][c]/presultR[(k-pulse_average)%(pulse_average+1)][c][c];
+        if(abs(diff)>(1.0-convergence))
          flag+=1;
         else
          flag=0;
@@ -485,18 +483,21 @@ while(flag<pulse_average){
 
 }
 
-long double buffer=0;
+long double buffer=0,bufferC=0;
 
              for(int c=0;c<neq;c++)
                  for(int d=0;d<neq;d++){
                   buffer+=Trans_AVE[0][0][c][d]*presultR[k%(pulse_average+1)][c][d]+Trans_AVE[0][0][c+neq][d]*presultI[k%(pulse_average+1)][c][d];
                   buffer+=Trans_AVE[1][1][c][d]*presultR[k%(pulse_average+1)][c][d]+Trans_AVE[1][1][c+neq][d]*presultI[k%(pulse_average+1)][c][d];
                  }
+            for(int c=0;c<neq;c++)
+                 bufferC+=presultR[k%(pulse_average+1)][c][c];
 
 buffer=buffer/(ninterval_1+ninterval_2+1);
 
        file2<<setiosflags(ios::left)<<setw(30)<<1/period;
        file2<<setiosflags(ios::left)<<setw(30)<<buffer;
+       file2<<setiosflags(ios::left)<<setw(30)<<bufferC;
        file2<<setiosflags(ios::left)<<setw(30)<<k;
        file2<<setiosflags(ios::left)<<setw(30)<<m<<endl;
 
