@@ -266,7 +266,6 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
       }
 
 
-
      for(int i=0;i<neq*2;i++)
          for(int j=0;j<neq;j++)
              for(int k=0;k<neq*2;k++){
@@ -451,6 +450,8 @@ solve_Martix(M,Trans,Trans_AVE,Time);
  int k=0,flag=0;
  double diff=0,diff0=0;
 
+//for(int i=0;i<5;i++)
+//Matrix_Multiply(Trans,Trans);
 
 while(flag<pulse_average){
 
@@ -470,9 +471,10 @@ while(flag<pulse_average){
 
       if(k>pulse_average){
           diff0=0;
-          for(int c=0;c<neq;c++)
-          diff0=diff0+abs((1-presultR[k%(pulse_average+1)][c][c]/presultR[(k-pulse_average)%(pulse_average+1)][c][c]))/neq;
-
+          for(int c=0;c<neq;c++){
+            for(int d=0;d<neq;d++)
+                diff0=diff0+abs((1-presultR[k%(pulse_average+1)][c][d]/presultR[(k-pulse_average)%(pulse_average+1)][c][d]))/(neq*neq);
+          }
         if(diff0<diff){
            if(abs(diff)<(convergence))
               flag+=1;
