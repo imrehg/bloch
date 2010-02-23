@@ -36,10 +36,10 @@ long double d[neq][neq]={{0,-0.20124*2*pi,-0.20124*2*pi+lasDe,-0.20124*2*pi-9.19
                          {+9.192631*2*pi+0.20124*2*pi-lasDe,+9.192631*2*pi-lasDe,9.192631*2*pi,0}};//laser */
 long double y0I[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};//initial condition
 long double y0R[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0.5,0},{0,0,0,0.5}};//initial condiion
-void fun(long double ***,long double ***,long double **,int );//Áp¥ß¤èµ{¦¡
-void solve(long double ***,long double ***,long double ***,long double ***,long double ***,long double*,int);//ºtºâªk
-long double ReRabi(long double,long double,long double );//¯ß½Ä¥]µ¸½u¨ç¼Æ(¹ê³¡)
-long double ImRabi(long double,long double,long double );//¯ß½Ä¥]µ¸½u¨ç¼Æ(µê³¡)
+void fun(long double ***,long double ***,long double **,int );//è¯ç«‹æ–¹ç¨‹å¼
+void solve(long double ***,long double ***,long double ***,long double ***,long double ***,long double*,int);//æ¼”ç®—æ³•
+long double ReRabi(long double,long double,long double );//è„ˆè¡åŒ…çµ¡ç·šå‡½æ•¸(å¯¦éƒ¨)
+long double ImRabi(long double,long double,long double );//è„ˆè¡åŒ…çµ¡ç·šå‡½æ•¸(è™›éƒ¨)
 int factorial (int);
 void fun_Matrix(long double *****,long double **);
 void solve_Martix(long double ***,long double ****,long double ****,long double *);
@@ -56,7 +56,7 @@ int factorial (int num)
  return factorial(num-1)*num; // recursive call
 }
 
-long double ReRabi(long double x,long double period,long double peak)//¯ß½Ä¥]µ¸½u¨ç¼Æ(¹ê³¡)¡A°ª´µ¨ç¼Æ*Re[e^{-i*phase}]
+long double ReRabi(long double x,long double period,long double peak)//è„ˆè¡åŒ…çµ¡ç·šå‡½æ•¸(å¯¦éƒ¨)ï¼Œé«˜æ–¯å‡½æ•¸*Re[e^{-i*phase}]
 {
   long double value=0,time=0,factor=0;
   int i=0;
@@ -70,7 +70,7 @@ long double ReRabi(long double x,long double period,long double peak)//¯ß½Ä¥]µ¸½
   return peak*value;
 }
 
-long double ImRabi(long double x,long double period,long double peak)//¯ß½Ä¥]µ¸½u¨ç¼Æ(µê³¡)¡A°ª´µ¨ç¼Æ*Im[e^{-i*phase}]
+long double ImRabi(long double x,long double period,long double peak)//è„ˆè¡åŒ…çµ¡ç·šå‡½æ•¸(è™›éƒ¨)ï¼Œé«˜æ–¯å‡½æ•¸*Im[e^{-i*phase}]
 {
   long double value=0,time=0,factor=0;
   int i=0;
@@ -315,7 +315,7 @@ int sweep(int steps,int total_steps,long double PeakPower,long double convergenc
   long double phase=0;
   ninterval_1 =n1;
   ninterval_2 =n2;
-  fstream file1,file2;//file1:¬ö¿ı¿é¤Jªº°Ñ¼Æ¡Cfile2://¬ö¿ı­pºâµ²ªG
+  fstream file1,file2;//file1:ç´€éŒ„è¼¸å…¥çš„åƒæ•¸ã€‚file2://ç´€éŒ„è¨ˆç®—çµæœ
   peakO = PeakPower/150*1.34163815218652164669542605053/2;
   nexp=expN;
   stringstream strstream;
@@ -356,14 +356,14 @@ for(int thread=0;thread<2;thread++)
            }
      }
     }
-    long double ***presultR= new long double**[pulse_average+1];//©Ò¦³®É¶¡ÂIªº¼Æ­È¦s©ó¦¹«ü¼Ğ(real)
+    long double ***presultR= new long double**[pulse_average+1];//æ‰€æœ‰æ™‚é–“é»çš„æ•¸å€¼å­˜æ–¼æ­¤æŒ‡æ¨™(real)
       for(int i=0;i<pulse_average+1;i++){
           presultR[i]=new long double*[neq];
           for(int j=0;j<neq;j++){
               presultR[i][j]=new long double[neq];
            }
      }
-   long double ***presultI= new long double**[pulse_average+1];//©Ò¦³®É¶¡ÂIªº¼Æ­È¦s©ó¦¹«ü¼Ğ(imaginary) presultI[][o][o]¬°®É¶¡°Ñ¼Æ
+   long double ***presultI= new long double**[pulse_average+1];//æ‰€æœ‰æ™‚é–“é»çš„æ•¸å€¼å­˜æ–¼æ­¤æŒ‡æ¨™(imaginary) presultI[][o][o]ç‚ºæ™‚é–“åƒæ•¸
       for(int i=0;i<pulse_average+1;i++){
           presultI[i]=new long double*[neq];
           for(int j=0;j<neq;j++){
