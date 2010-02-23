@@ -36,10 +36,10 @@ long double d[neq][neq]={{0,-0.20124*2*pi,-0.20124*2*pi+lasDe,-0.20124*2*pi-9.19
                          {+9.192631*2*pi+0.20124*2*pi-lasDe,+9.192631*2*pi-lasDe,9.192631*2*pi,0}};//laser */
 long double y0I[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};//initial condition
 long double y0R[neq][neq]={{0,0,0,0},{0,0,0,0},{0,0,0.5,0},{0,0,0,0.5}};//initial condiion
-void fun(long double ***,long double ***,long double **,int );//Áp¥ß€èµ{Š¡
-void solve(long double ***,long double ***,long double ***,long double ***,long double ***,long double*,int);//ºtºâªk
-long double ReRabi(long double,long double,long double );//¯ßœÄ¥]µžœušçŒÆ(¹ê³¡)
-long double ImRabi(long double,long double,long double );//¯ßœÄ¥]µžœušçŒÆ(µê³¡)
+void fun(long double ***,long double ***,long double **,int );//聯立方程式
+void solve(long double ***,long double ***,long double ***,long double ***,long double ***,long double*,int);//演算法
+long double ReRabi(long double,long double,long double );//脈衝包絡線函數(實部)
+long double ImRabi(long double,long double,long double );//脈衝包絡線函數(虛部)
 int factorial (int);
 void fun_Matrix(long double *****,long double **);
 void solve_Martix(long double ***,long double ****,long double ****,long double *);
@@ -56,7 +56,7 @@ int factorial (int num)
  return factorial(num-1)*num; // recursive call
 }
 
-long double ReRabi(long double x,long double period,long double peak)//¯ßœÄ¥]µžœušçŒÆ(¹ê³¡)¡A°ªŽµšçŒÆ*Re[e^{-i*phase}]
+long double ReRabi(long double x,long double period,long double peak)//脈衝包絡線函數(實部)，高斯函數*Re[e^{-i*phase}]
 {
   long double value=0,time=0,factor=0;
   int i=0;
@@ -70,7 +70,7 @@ long double ReRabi(long double x,long double period,long double peak)//¯ßœÄ�
   return peak*value;
 }
 
-long double ImRabi(long double x,long double period,long double peak)//¯ßœÄ¥]µžœušçŒÆ(µê³¡)¡A°ªŽµšçŒÆ*Im[e^{-i*phase}]
+long double ImRabi(long double x,long double period,long double peak)//脈衝包絡線函數(虛部)，高斯函數*Im[e^{-i*phase}]
 {
   long double value=0,time=0,factor=0;
   int i=0;
@@ -315,7 +315,7 @@ int sweep(int steps,int total_steps,long double PeakPower,long double convergenc
   long double phase=0;
   ninterval_1 =n1;
   ninterval_2 =n2;
-  fstream file1,file2;//file1:¬ö¿ý¿é€Jªº°ÑŒÆ¡Cfile2://¬ö¿ý­pºâµ²ªG
+  fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
   peakO = PeakPower/150*1.34163815218652164669542605053/2;
   nexp=expN;
   stringstream strstream;
@@ -356,14 +356,14 @@ for(int thread=0;thread<2;thread++)
            }
      }
     }
-    long double ***presultR= new long double**[pulse_average+1];//©ÒŠ³®É¶¡ÂIªºŒÆ­ÈŠs©óŠ¹«üŒÐ(real)
+    long double ***presultR= new long double**[pulse_average+1];//所有時間點的數值存於此指標(real)
       for(int i=0;i<pulse_average+1;i++){
           presultR[i]=new long double*[neq];
           for(int j=0;j<neq;j++){
               presultR[i][j]=new long double[neq];
            }
      }
-   long double ***presultI= new long double**[pulse_average+1];//©ÒŠ³®É¶¡ÂIªºŒÆ­ÈŠs©óŠ¹«üŒÐ(imaginary) presultI[][o][o]¬°®É¶¡°ÑŒÆ
+   long double ***presultI= new long double**[pulse_average+1];//所有時間點的數值存於此指標(imaginary) presultI[][o][o]為時間參數
       for(int i=0;i<pulse_average+1;i++){
           presultI[i]=new long double*[neq];
           for(int j=0;j<neq;j++){
