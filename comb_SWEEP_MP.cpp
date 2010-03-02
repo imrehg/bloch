@@ -247,6 +247,9 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
 
       for(int j=1;j<=nexp;j++){
         Matrix_Multiply(Trans_I,Trans_E);
+
+
+
          for(int a=0;a<2*neq;a++)
            for(int b=0;b<neq;b++)
              for(int c=0;c<2*neq;c++)
@@ -265,6 +268,7 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
 
       }
 
+   cout<<Trans[0][0][0][0]<<endl;
 
      for(int i=0;i<neq*2;i++)
          for(int j=0;j<neq;j++)
