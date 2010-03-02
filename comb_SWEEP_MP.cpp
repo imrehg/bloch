@@ -268,7 +268,6 @@ void solve_Martix(long double ***M,long double ****Trans,long double ****Trans_A
 
       }
 
-   cout<<Trans[0][0][0][0]<<endl;
 
      for(int i=0;i<neq*2;i++)
          for(int j=0;j<neq;j++)

@@ -156,10 +156,17 @@ void fun_Matrix(gmm::row_matrix< gmm::wsvector<long double> > &Trans,long double
 
 void solve_Martix(long double ***M, gmm::row_matrix< gmm::wsvector<long double> >&Trans, gmm::row_matrix< gmm::wsvector<long double> >&Trans_Ave,long double *T)// solve(presultI,presultR,M,k)
 {
+  gmm::row_matrix< gmm::wsvector<long double> > Trans_B(neq*neq,neq*neq),Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_D(neq*neq,neq*neq);
+  gmm::row_matrix< gmm::rsvector<long double> > Trans_E_R(neq*neq,neq*neq);
 
   for(int t=1;t<(ninterval_1+ninterval_2)+1;t++){
 
-      gmm::row_matrix< gmm::wsvector<long double> > Trans_B(neq*neq,neq*neq),Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_D(neq*neq,neq*neq);
+      gmm::clear(Trans_B);
+      gmm::clear(Trans_D);
+      gmm::clear(Trans_E);
+      gmm::clear(Trans_I);
+      gmm::clear(Trans_C);
+      gmm::clear(Trans_E_R);
 
        for(int i=0;i<neq*neq;i++){
              Trans_I(i,i)=1;
@@ -167,9 +174,10 @@ void solve_Martix(long double ***M, gmm::row_matrix< gmm::wsvector<long double> 
        }
 
       fun_Matrix(Trans_E,M[t-1]);
+      gmm::copy(Trans_E,Trans_E_R);
 
       for(int j=1;j<=nexp;j++){
-        gmm::mult(Trans_E,Trans_I,Trans_C);
+        gmm::mult(Trans_E_R,Trans_I,Trans_C);
         gmm::copy(Trans_C,Trans_I);
 
          for(int a=0;a<neq*neq;a++)
@@ -218,7 +226,7 @@ int sweep(int steps,int total_steps,long double PeakPower,long double convergenc
   nexp=expN;
   stringstream strstream;
   string filename;
-  strstream<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz.txt";
+  strstream<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
@@ -260,10 +268,13 @@ for(int m=0;m<=steps;m++)
     gmm::row_matrix< gmm::wsvector<long double> > Trans(neq*neq,neq*neq),Trans_AVE(neq*neq,neq*neq);
     gmm::col_matrix< gmm::wsvector<long double> > Result(neq*neq,pulse_average+1);
     gmm::row_matrix< gmm::rsvector<long double> > TransFinal(neq*neq,neq*neq);
+
     for (int i=0;i<neq;i++){ //initailizing
     for (int j=0;j<neq;j++){
-            Result(ImagComp(i,j),0)=y0I[i][j];
+
             Result(RealComp(i,j),0)=y0R[i][j];
+            if(i!=j) Result(ImagComp(i,j),0)=y0I[i][j];
+
             }
     }
 
