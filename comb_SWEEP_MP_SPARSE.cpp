@@ -12,7 +12,7 @@
 #include <gmm/gmm.h>//for gmm library
 using namespace std;
 const long double pi=3.14159265358979323846264338327950288419716939937511;
-const int npulse=500000000;
+const int npulse=10000000;
 int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 long double period0=10.87827848197104833208251261254802895928271242476719;
 long double frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
@@ -250,7 +250,7 @@ for(int thread=0;thread<2;thread++)
      }
 
 
-
+int ninterval_m = (npulse-1);
 
 for(int m=0;m<=steps;m++)
 {
@@ -321,11 +321,11 @@ solve_Martix(M,Trans,Trans_AVE,Time);
 gmm::copy(Trans,TransFinal);
 
 int k=0,flag=0;
-double diff=0,diff0=0;
+double diff=0;
+if(m==0){
+  while(flag<pulse_average){
 
-while(flag<pulse_average){
-
-     for(int a=0;a<neq;a++)
+      for(int a=0;a<neq;a++)
            for(int b=0;b<neq;b++){
            Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
            Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
@@ -333,44 +333,69 @@ while(flag<pulse_average){
            gmm::mult(TransFinal,gmm::mat_col(Result,(k)%(pulse_average+1)),gmm::mat_col(Result,(k+1)%(pulse_average+1)));
 
            k+=1;
-
       if(k>pulse_average){
-          diff0=0;
+          diff=0;
           for(int c=0;c<neq;c++){
             for(int d=0;d<neq;d++)
-                diff0=diff0+abs((1-Result(RealComp(c,d),(k%(pulse_average+1)))/Result(RealComp(c,d),(k-pulse_average)%(pulse_average+1))))/(neq*neq);
-
+              if(abs(1-Result(RealComp(c,d),(k%(pulse_average+1)))/(Result(RealComp(c,d),(k-pulse_average)%(pulse_average+1))))<convergence)
+                       diff+=1;
           }
-        if(diff0<diff){
-           if(abs(diff)<(convergence))
+        if(diff==neq*neq)
               flag+=1;
-           else
-             flag=0;}
          else
             flag=0;
-
-         diff=diff0;
-
       }
-
-     if(k==(npulse-1))
+     if(k==ninterval_m)
        flag=pulse_average+1;
+  }
+  ninterval_m = k;
+}else{
+
+  while(flag<pulse_average){
+
+      for(int a=0;a<neq;a++)
+           for(int b=0;b<neq;b++){
+           Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
+           Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
+
+           gmm::mult(TransFinal,gmm::mat_col(Result,(k)%(pulse_average+1)),gmm::mat_col(Result,(k+1)%(pulse_average+1)));
+
+           k+=1;
+      if(k>pulse_average){
+          diff=0;
+          for(int c=0;c<neq;c++){
+            for(int d=0;d<neq;d++)
+              if(abs(1-Result(RealComp(c,d),(k%(pulse_average+1)))/(Result(RealComp(c,d),(k-pulse_average)%(pulse_average+1))))<convergence)
+                       diff+=1;
+          }
+        if(diff==neq*neq)
+              flag+=1;
+         else
+            flag=0;
+      }
+     if(k==ninterval_m)
+       flag=pulse_average+1;
+  }
 
 }
 
-long double buffer=0,bufferC=0;
+
+
+long double buffer=0,buffer2=0,bufferC=0;
 
                  for(int d=0;d<neq*neq;d++){
-                  buffer+=Trans_AVE(0,d)*Result(d,k%(pulse_average+1));
                   buffer+=Trans_AVE(1,d)*Result(d,k%(pulse_average+1));
+                  buffer2+=Trans_AVE(0,d)*Result(d,k%(pulse_average+1));
                  }
             for(int c=0;c<neq;c++)
                  bufferC+=Result(c,k%(pulse_average+1));
 
-buffer=buffer/(ninterval_1+ninterval_2+1);
+       buffer=buffer/(ninterval_1+ninterval_2+1);
+       buffer2=buffer2/(ninterval_1+ninterval_2+1);
 
        file2<<setiosflags(ios::left)<<setw(30)<<1/period;
        file2<<setiosflags(ios::left)<<setw(30)<<buffer;
+       file2<<setiosflags(ios::left)<<setw(30)<<buffer2;
        file2<<setiosflags(ios::left)<<setw(30)<<bufferC;
        file2<<setiosflags(ios::left)<<setw(30)<<k;
        file2<<setiosflags(ios::left)<<setw(30)<<m<<endl;
