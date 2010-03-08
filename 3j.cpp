@@ -8,7 +8,12 @@ struct Atomic {
     return factorial(num-1)*num; // recursive call
   }
 
-  int bad_values (int j1,int j2,int j3,int m1,int m2,int m3){
+
+
+
+  long double threej (int j1,int j2,int j3,int m1,int m2,int m3){
+
+   int bad_values (int j1,int j2,int j3,int m1,int m2,int m3){
         if (j1<abs(j2-j3)||j1>(j2+j3))
             return 1;
         if (abs(m1)>j1 || abs(m2)>j2 || abs(m3)>j3)
@@ -17,9 +22,6 @@ struct Atomic {
             return 1;
         return 0;
   }
-
-
-  long double 3j (int j1,int j2,int j3,int m1,int m2,int m3){
 
    if (bad_values (j1,j2,j3,m1,m2,m3)){
        std::cout<<"Bad Values";
@@ -58,6 +60,56 @@ struct Atomic {
 
   }
 
+  long double sixj(int j1, int j2, int j3, int l1, int l2, int l3){
+
+    int bad_values(j1,j2,j3,l1,l2,l3){
+        if (j1<(abs(j2-j3)) || j1>(j2+j3)):
+            return 1;
+        if (j1<(abs(l2-l3)) || j1>(l2+l3)):
+            return 1;
+        if (l1<(abs(j2-l3)) || l1>(j2+l3)):
+            return 1;
+        if (l1<(abs(l2-j3)) || l1>(l2+j3)):
+            return 1;
+        return 0;
+        }
+
+
+    long double delta(a,b,c){
+        return sqrt(1.0*((factorial(a+b-c)*factorial(a-b+c)*factorial(-a+b+c))/factorial(a+b+c+1)));
+    }
+
+    if bad_values(j1,j2,j3,l1,l2,l3):
+        return 0
+
+    int jphase=(-1)^(j1+j2+l1+l2);
+    long double proddelt=delta(j1,j2,j3)*delta(l1,l2,j3)*delta(l1,j2,l3)*delta(j1,l2,l3);
+
+
+    int kmax = min(min(j1+j2+l1+l2+1,j1+j2-j3),min(min(l1+l2-j3,j1+l2-l3),l1+j2-l3))
+    int kmin = max(0, -j1-l1+j3+l3, -j2-l2+j3+l3)
+    long double jsum = 0
+
+    for (int k=kmin; k<kmax+1;k++){
+        long double jsfac[8];
+        jsfac[0] = factorial(j1+j2+l1+l2+1-k);
+        jsfac[1] = factorial(k);
+        jsfac[2] = factorial(j1+j2-j3-k);
+        jsfac[3] = factorial(l1+l2-j3-k);
+        jsfac[4] = factorial(j1+l2-l3-k);
+        jsfac[5] = factorial(l1+j2-l3-k);
+        jsfac[6] = factorial(-j1-l1+j3+l3+k);
+        jsfac[7] = factorial(-j2-l2+j3+l3+k);
+        long double product=1;
+
+        for (int j=1; j<8; j++)
+          product=product/jsfac[j];
+
+          jsum += (-1)^k * jsfac[0]*product;
+
+    }
+
+    return jphase*proddelt*jsum
 
 
 
