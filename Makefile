@@ -1,18 +1,18 @@
-
 CC=g++
-CXXFLAGS=-c -g -Wall -O3 -fopenmp -DPARALLEL_MODE_OMP
-LDFLAGS=
-SOURCES=comb_FAST_SWEEP.cpp
-OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=comb_FAST_SWEEP
+CXXFLAGS=-O3 -fopenmp
+LDFLAGS=-o
+MAIN=comb_SWEEP_D1_main.cpp
+D1=comb_SWEEP_D1.cpp
+O=$(MAIN:.cpp=.o)
+O2=$(D1:.cpp=.o)
+EXECUTABLE=comb
 
-all: $(SOURCES) $(EXECUTABLE)
+all: $(O) $(O2) final
 	
-$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+$(O): atom.cpp comb.h $(MAIN)
+	$(CC) -c $(CXXFLAGS) $(MAIN)
 
-.cpp.o:
-	$(CC) $(CXXFLAGS) $< -o $@
-
-clean:
-	rm -rf *o ${EXECUTABLE}
+$(O2): atom.cpp comb.h $(D1)
+	$(CC) -c $(CXXFLAGS) $(D1)
+final:
+	$(CC) $(LDFLAGS) $(EXECUTABLE) $(CXXFLAGS) $(O) $(O2) 
