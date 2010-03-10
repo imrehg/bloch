@@ -154,7 +154,7 @@ void solve_Martix(col_matrix< rsvector<long double> >&M, row_matrix< wsvector<lo
   col_matrix< rsvector<long double> > Msub(neq,neq);
 
   for(int t=1;t<(ninterval_1+ninterval_2)+1;t++){
-
+      clean(Trans,1E-10);
       clear(Trans_B);
       clear(Trans_D);
       clear(Trans_E);
@@ -173,6 +173,9 @@ void solve_Martix(col_matrix< rsvector<long double> >&M, row_matrix< wsvector<lo
       copy(Trans_E,Trans_E_R);
 
       for(int j=1;j<=nexp;j++){
+        clean(Trans_C,1E-10);
+        clean(Trans_E_R,1E-10);
+        clean(Trans_I,1E-10);
         mult(Trans_E_R,Trans_I,Trans_C);
         copy(Trans_C,Trans_I);
 
@@ -187,7 +190,7 @@ void solve_Martix(col_matrix< rsvector<long double> >&M, row_matrix< wsvector<lo
 
       }
 //      cout<<Trans;
-//      clean(Trans,1E-6);
+//
 }
 
 
@@ -330,6 +333,7 @@ for(int m=0;m<=steps;m++)
 solve_Martix(M,Trans,Trans_AVE,Time,EnerDet);
 copy(Trans,TransFinal);
 
+cout<<"end of solve"<<endl;
 int k=0,flag=0;
 double diff=0;
 
@@ -382,7 +386,7 @@ if(m==0){
 
 long double buffer=0,buffer2=0,bufferC=0;
 
-                 for(int d=0;d<neq*neq;d++){
+            for(int d=0;d<neq*neq;d++){
                   buffer+=Trans_AVE(1,d)*Result(d,k%(pulse_average+1));
                   buffer2+=Trans_AVE(0,d)*Result(d,k%(pulse_average+1));
                  }
