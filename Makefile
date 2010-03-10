@@ -10,7 +10,7 @@ EXECUTABLE=comb
 .PHONY: all final clean
 
 all: $(O) $(O2) final
-	
+
 $(O): atom.cpp comb.h $(MAIN)
 	$(CC) -c $(CXXFLAGS) $(MAIN)
 
