@@ -10,39 +10,26 @@
 #include <ctime>//For timer
 #include <omp.h>//For openmp
 #include <gmm/gmm.h>//for gmm library
+#include "atom.cpp" //for atom struct
 using namespace std;
+using namespace gmm;
 const long double pi=3.14159265358979323846264338327950288419716939937511;
 const int npulse=10000000;
 int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 long double period0=10.87827757077666562510422409751326305981252200206427;
 long double frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
-const int  neq=4,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
+const int  neq=32,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 int nexp=12;
 
-gmm::rsvector<long double> r(neq)
-//={0.0052227*2*pi,0.0052227*2*pi,0,0};//total decay constant
-gmm::rsvector<long double> R(neq)
-//={0.0052227*2*pi,0.0052227*2*pi,0,0};//relaxation rate
-gmm::row_matrix< gmm::rsvector<long double> > Rc(neq,neq);
-gmm::row_matrix< gmm::rsvector<long double> > A(neq,neq);
-//={{0,0,0,0},{0,0,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0},{0.0052227*2*pi/2,0.0052227*2*pi/2,0,0}};//Einstein A coefficient
-gmm::rsvector<long double> R_L(neq)
-//={0,0,0,0};//laser line width
+rsvector<long double> r(neq);
+//total decay constant
+rsvector<long double> R(neq);
+//relaxation rate
+row_matrix< rsvector<long double> > Rc(neq,neq);
+row_matrix< rsvector<long double> > A(neq,neq);
+rsvector<long double> R_L(neq);
 long double lasDe = 0;
-gmm::rsvector<long double> EnergyDiff(neq-1);
-//={0.2012871*2*pi,0,9.192631770*2*pi};
-//long double d0[neq][neq]={{0,-0.20124*2*pi,-0.20124*2*pi+lasDe,-0.20124*2*pi-9.192631*2*pi+lasDe},
-//                         {+0.20124*2*pi,0,+lasDe,-9.192631*2*pi+lasDe},
-//                         {0.20124*2*pi-lasDe,0-lasDe,0,-9.192631*2*pi},
-//                         {+9.192631*2*pi+0.20124*2*pi-lasDe,+9.192631*2*pi-lasDe,9.192631*2*pi,0}};//laser */
-//long double d[neq][neq]={{0,-0.20124*2*pi,-0.20124*2*pi+lasDe,-0.20124*2*pi-9.192631*2*pi+lasDe},
-//                         {+0.20124*2*pi,0,+lasDe,-9.192631*2*pi+lasDe},
-//                         {0.20124*2*pi-lasDe,0-lasDe,0,-9.192631*2*pi},
-//                         {+9.192631*2*pi+0.20124*2*pi-lasDe,+9.192631*2*pi-lasDe,9.192631*2*pi,0}};//laser */
-gmm::row_matrix< gmm::rsvector<long double> > y0I(neq,neq);
-//={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};//initial condition
-gmm::row_matrix< gmm::rsvector<long double> > y0R(neq,neq);
-//={{0,0,0,0},{0,0,0,0},{0,0,0.5,0},{0,0,0,0.5}};//initial condiion
+rsvector<long double> EnergyDiff(neq-1);
 double phase=0;
 int pulse_average=100;
 
@@ -109,7 +96,7 @@ long double ImRabi(long double x,long double period,long double peak)//脈衝包
 }
 
 
-void fun_Matrix(gmm::row_matrix< gmm::wsvector<long double> > &Trans,long double **H,gmm::row_matrix< gmm::wsvector<long double> >&D)//B imaginary part ; C real part; H rabi requence; w time
+void fun_Matrix(row_matrix< wsvector<long double> > &Trans,col_matrix< rsvector<long double> >&H,row_matrix< wsvector<long double> >&D)//B imaginary part ; C real part; H rabi requence; w time
 {
 
   for (int i=0;i<neq;i++){
@@ -121,13 +108,13 @@ void fun_Matrix(gmm::row_matrix< gmm::wsvector<long double> > &Trans,long double
               if(i>j)
               Trans(RealComp(i,i),ImagComp(i,j))+=-2*H[j][i];
           }
-          Trans(RealComp(i,i),RealComp(j,j))+=A[i][j];
+          Trans(RealComp(i,i),RealComp(j,j))+=A(i,j);
       }
  } // Bloch eq for population part
 
  for (int j=1;j<neq;j++){
     for (int i=0;i<j;i++){
-       Trans(RealComp(i,j),RealComp(i,j))=-(R[i]+R[j]+R_L[i])/2-Rc[i][j];
+       Trans(RealComp(i,j),RealComp(i,j))=-(R[i]+R[j]+R_L[i])/2-Rc(i,j);
        Trans(RealComp(i,j),ImagComp(i,j))=D(i,j);
        for (int l=0;l<neq;l++){
            if(l<j){
@@ -160,64 +147,50 @@ void fun_Matrix(gmm::row_matrix< gmm::wsvector<long double> > &Trans,long double
 
 }
 
-void solve_Martix(long double ***M, gmm::row_matrix< gmm::wsvector<long double> >&Trans, gmm::row_matrix< gmm::wsvector<long double> >&Trans_Ave,long double *T, gmm::row_matrix< gmm::wsvector<long double> >&D)// solve(presultI,presultR,M,k)
+void solve_Martix(col_matrix< rsvector<long double> >&M, row_matrix< wsvector<long double> >&Trans, row_matrix< wsvector<long double> >&Trans_Ave,long double *T, row_matrix< wsvector<long double> >&D)// solve(presultI,presultR,M,k)
 {
-  gmm::row_matrix< gmm::wsvector<long double> > Trans_B(neq*neq,neq*neq),Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_D(neq*neq,neq*neq);
-  gmm::row_matrix< gmm::rsvector<long double> > Trans_E_R(neq*neq,neq*neq);
+  row_matrix< wsvector<long double> > Trans_B(neq*neq,neq*neq),Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_D(neq*neq,neq*neq);
+  row_matrix< rsvector<long double> > Trans_E_R(neq*neq,neq*neq);
+  col_matrix< rsvector<long double> > Msub(neq,neq);
 
   for(int t=1;t<(ninterval_1+ninterval_2)+1;t++){
 
-      gmm::clear(Trans_B);
-      gmm::clear(Trans_D);
-      gmm::clear(Trans_E);
-      gmm::clear(Trans_I);
-      gmm::clear(Trans_C);
-      gmm::clear(Trans_E_R);
+      clear(Trans_B);
+      clear(Trans_D);
+      clear(Trans_E);
+      clear(Trans_I);
+      clear(Trans_C);
+      clear(Trans_E_R);
 
        for(int i=0;i<neq*neq;i++){
              Trans_I(i,i)=1;
              Trans_B(i,i)=1;
        }
 
-      fun_Matrix(Trans_E,M[t-1],D);
-      gmm::copy(Trans_E,Trans_E_R);
+     copy(sub_matrix(M,sub_interval(0,neq),sub_interval((t-1)*neq,neq)),Msub);
+
+      fun_Matrix(Trans_E,Msub,D);
+      copy(Trans_E,Trans_E_R);
 
       for(int j=1;j<=nexp;j++){
-        gmm::mult(Trans_E_R,Trans_I,Trans_C);
-        gmm::copy(Trans_C,Trans_I);
+        mult(Trans_E_R,Trans_I,Trans_C);
+        copy(Trans_C,Trans_I);
 
          for(int a=0;a<neq*neq;a++)
              for(int b=0;b<neq*neq;b++)
                       Trans_B(a,b)+=Trans_I(a,b)*pow((T[t]-T[t-1]),j)/factorial(j);
       }
 
-        gmm::add(Trans_B,Trans_Ave);
-        gmm::mult(Trans_B,Trans,Trans_D);
-        gmm::copy(Trans_D,Trans);
+        add(Trans_B,Trans_Ave);
+        mult(Trans_B,Trans,Trans_D);
+        copy(Trans_D,Trans);
 
       }
 //      cout<<Trans;
-//      gmm::clean(Trans,1E-6);
+//      clean(Trans,1E-6);
 }
 
 
-
-
-
-//void adj_detune(long double detune)
-//{
-//
-// d[0][2]=d0[0][2]+detune;
-// d[0][3]=d0[0][3]+detune;
-// d[1][2]=d0[1][2]+detune;
-// d[1][3]=d0[1][3]+detune;
-// d[2][0]=d0[2][0]-detune;
-// d[3][0]=d0[3][0]-detune;
-// d[2][1]=d0[2][1]-detune;
-// d[3][1]=d0[3][1]-detune;
-//
-//}
-//
 int D1_coef (int L,int F,int mf){
      if(F==3)
       return 32-(L*16+(mf+4));
@@ -244,25 +217,44 @@ int sweep(int steps,int total_steps,long double PeakPower,long double convergenc
   file2.open(filename.c_str(),ios::out | ios::trunc);
   file1.open("inputMP.txt", ios::out | ios::trunc);
   file2.precision(15);
-//adj_detune(detune);
   pulse_average=conS;
+  row_matrix< rsvector<long double> > y0I(neq,neq);
+  //initial condition
+  row_matrix< rsvector<long double> > y0R(neq,neq);
+  //initial condiion
+  row_matrix< wsvector<long double> > EnerDet(neq,neq);
+  Atom atom;
+
+   EnergyDiff[8]=0.2012871;
+   EnergyDiff[24]=9.192631;
+    for (int i=0; i<neq; i++)
+      for (int j=i+1; j<neq; j++)
+        for (int k=i; k<j; k++){
+           EnerDet(i,j)-=EnergyDiff[k];
+           EnerDet(j,i)+=EnergyDiff[k];
+        }
+  //initialzing the energy level difference for D2 line
+
+      for(int j=3; j<5;j++)
+         for(int k=-j;k<j+1;k++)
+             for(int m=3; m<5;m++)
+                for(int n=-m;n<m+1;n++)
+                  for(int q=-1;q<2;q++)
+                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,0,1,j,m,k,n,0.5,0.5,3.5),2)*0.0052227*2*pi;
+
+  //initialzing the A coefficients
+
+
+
 
 #pragma omp num_threads(2)
 #pragma omp parallel for
 for(int thread=0;thread<2;thread++)
 {
    long double *Time= new long double[ninterval_1+ninterval_2+1];
-   long double ***M= new long double**[ninterval_1+ninterval_2+1];//Rabifrequence*2
+   col_matrix< rsvector<long double> > M(neq,(ninterval_1+ninterval_2+1)*neq);//Rabifrequence*2
+   int ninterval_m = (npulse-1);
 
-      for(int i=0;i<(ninterval_1+ninterval_2+1);i++){
-          M[i]=new long double*[neq];
-          for(int j=0;j<neq;j++){
-              M[i][j]=new long double[neq];
-           }
-     }
-
-
-int ninterval_m = (npulse-1);
 
 for(int m=0;m<=steps;m++)
 {
@@ -276,34 +268,37 @@ for(int m=0;m<=steps;m++)
    interval_2=period-interval_1;
    dt_2=interval_2/ninterval_2;
 
-
-    gmm::row_matrix< gmm::wsvector<long double> > Trans(neq*neq,neq*neq),Trans_AVE(neq*neq,neq*neq);
-    gmm::col_matrix< gmm::wsvector<long double> > Result(neq*neq,pulse_average+1);
-    gmm::row_matrix< gmm::rsvector<long double> > TransFinal(neq*neq,neq*neq);
-    gmm::row_matrix< gmm::wsvector<long double> > EnerDet(neq,neq);
-
-    for (int i=0; i<neq; i++)
-      for (int j=i+1; j<neq; j++)
-        for (int k=i; k<j; k++){
-           EnerDet(i,j)-=EnergyDiff[k];
-           EnerDet(j,i)+=EnergyDiff[k];
-        }
+    row_matrix< wsvector<long double> > Trans(neq*neq,neq*neq),Trans_AVE(neq*neq,neq*neq);
+    col_matrix< wsvector<long double> > Result(neq*neq,pulse_average+1);
+    row_matrix< rsvector<long double> > TransFinal(neq*neq,neq*neq);
 
 
+   for(int i=16; i<32;i++)
+     y0R(i,i)=1.0/16;
 
-    for (int i=0;i<neq;i++){ //initailizing
+    for (int i=0;i<neq;i++){
     for (int j=0;j<neq;j++){
 
-            Result(RealComp(i,j),0)=y0R[i][j];
-            if(i!=j) Result(ImagComp(i,j),0)=y0I[i][j];
+            Result(RealComp(i,j),0)=y0R(i,j);
+            if(i!=j) Result(ImagComp(i,j),0)=y0I(i,j);
 
             }
     }
+ //initailizing for density matrices
+
+
+ for(int i=0;i<16;i++){
+   r[i]=0.0052227*2*pi;
+   R[i]=0.0052227*2*pi;
+ }
+
+ //initailizing for relaxation rate
 
     for(int i=0;i<neq*neq;i++){
         Trans(i,i)=1.0;
         Trans_AVE(i,i)=1.0;
     }
+
 
     for(int k=0;k<(ninterval_1+ninterval_2+1);k++){
 
@@ -321,26 +316,19 @@ for(int m=0;m<=steps;m++)
 
               buffer= Time[k]-period*int(Time[k]/period);
 
-              M[k][0][0]=0;
-              M[k][0][1]=0;
-              M[k][0][2]=0.38188130791298666722*ReRabi(buffer,period,peak);
-              M[k][0][3]=0.27277236279499047658*ReRabi(buffer,period,peak);
-              M[k][1][0]=0;
-              M[k][1][1]=0;
-              M[k][1][2]=0.14433756729740644113*ReRabi(buffer,period,peak);
-              M[k][1][3]=0.43301270189221932338*ReRabi(buffer,period,peak);
-              M[k][2][0]=0.38188130791298666722*ReRabi(buffer,period,peak);
-              M[k][2][1]=0.14433756729740644113*ReRabi(buffer,period,peak);
-              M[k][2][2]=0;
-              M[k][2][3]=0;
-              M[k][3][0]=0.27277236279499047658*ReRabi(buffer,period,peak);
-              M[k][3][1]=0.43301270189221932338*ReRabi(buffer,period,peak);
-              M[k][3][2]=0;
-              M[k][3][3]=0;
+  for(int i=0; i<2;i++)
+     for(int j=3; j<5;j++)
+        for(int t=-j;t<j+1;t++)
+          for(int l=0; l<2;l++)
+            for(int m=3; m<5;m++)
+               for(int n=-m;n<m+1;n++)
+                     M(D1_coef(i,j,t),k*neq+D1_coef(l,m,n))+=(atom.coef(+1,i,l,j,m,t,n,0.5,0.5,3.5)+atom.coef(-1,i,l,j,m,t,n,0.5,0.5,3.5))*ReRabi(buffer,period,peak);
+// //initailizing for M matrices
+
            }
 
 solve_Martix(M,Trans,Trans_AVE,Time,EnerDet);
-gmm::copy(Trans,TransFinal);
+copy(Trans,TransFinal);
 
 int k=0,flag=0;
 double diff=0;
@@ -353,7 +341,7 @@ if(m==0){
            Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
            Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
 
-           gmm::mult(TransFinal,gmm::mat_col(Result,(k)%(pulse_average+1)),gmm::mat_col(Result,(k+1)%(pulse_average+1)));
+           mult(TransFinal,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
 
            k+=1;
       if(k>pulse_average){
@@ -381,7 +369,7 @@ if(m==0){
            Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
            Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
 
-           gmm::mult(TransFinal,gmm::mat_col(Result,(k)%(pulse_average+1)),gmm::mat_col(Result,(k+1)%(pulse_average+1)));
+           mult(TransFinal,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
            k+=1;
 
      if(k==ninterval_m)
@@ -417,17 +405,7 @@ long double buffer=0,buffer2=0,bufferC=0;
 
 
 
-
-       for(int i=0;i<ninterval_1+ninterval_2+1;i++)
-         for(int j=0;j<neq;j++){
-               delete[] M[i][j];
-       }
-
-       for(int i=0;i<ninterval_1+ninterval_2+1;i++)
-               delete[] M[i];
-
       delete[] Time;
-      delete[] M;
 
 
 

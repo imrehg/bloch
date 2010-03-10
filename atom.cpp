@@ -114,9 +114,15 @@ struct Atom {
 
   }
 
-  long double coef(double q,double F1,double F2,double mf1, double mf2,double J1, double J2,double I){
-    return pow(-1,F2-1+mf1)*sqrt(2*F1+1)*threej(F2,1,F1,mf2,q,-mf1)*pow(-1,F2+J1+1+I)*sqrt((2*F2+1)*(2*J1+1))*sixj(J1,J2,1,F2,F1,I);
+  long double coef(double q,double L1, double L2, double F1,double F2,double mf1, double mf2,double J1, double J2,double I){
+    if(L1!=L2)
+     return pow(-1,F2-1+mf1)*sqrt(2*F1+1)*threej(F2,1,F1,mf2,q,-mf1)*pow(-1,F2+J1+1+I)*sqrt((2*F2+1)*(2*J1+1))*sixj(J1,J2,1,F2,F1,I);
+    else
+     return 0;
   }
+
+
+
 
 
 };
