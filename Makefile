@@ -7,6 +7,8 @@ O=$(MAIN:.cpp=.o)
 O2=$(D1:.cpp=.o)
 EXECUTABLE=comb
 
+.PHONY: all final clean
+
 all: $(O) $(O2) final
 	
 $(O): atom.cpp comb.h $(MAIN)
@@ -16,3 +18,6 @@ $(O2): atom.cpp comb.h $(D1)
 	$(CC) -c $(CXXFLAGS) $(D1)
 final:
 	$(CC) $(LDFLAGS) -o $(EXECUTABLE) $(O) $(O2) 
+
+clean:
+	rm -rf *.o
