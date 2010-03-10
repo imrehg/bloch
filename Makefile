@@ -1,6 +1,6 @@
 CC=g++
 CXXFLAGS=-O3 -fopenmp
-LDFLAGS=-o
+LDFLAGS=-fopenmp
 MAIN=comb_SWEEP_D1_main.cpp
 D1=comb_SWEEP_D1.cpp
 O=$(MAIN:.cpp=.o)
@@ -15,4 +15,4 @@ $(O): atom.cpp comb.h $(MAIN)
 $(O2): atom.cpp comb.h $(D1)
 	$(CC) -c $(CXXFLAGS) $(D1)
 final:
-	$(CC) $(LDFLAGS) $(EXECUTABLE) $(CXXFLAGS) $(O) $(O2) 
+	$(CC) $(LDFLAGS) -o $(EXECUTABLE) $(O) $(O2) 
