@@ -25,25 +25,23 @@ rsvector<long double> EnergyDiff(neq-1);
 
 int RealComp(int i,int j)
 {
-  if (i == j) {
-    return i;
-  } else {
-    if (i < j) {
-      swap(i, j);
-    }
+  if (i > j) {
     return (2*neq-1-i)*i/2+(j-i)+neq-1;
+  } else if (i < j) {
+    return (2*neq-1-j)*j/2+(i-j)+neq-1;
+  } else {
+    return 0;
   }
 }
 
 int ImagComp(int i,int j)
 {
-  if (i == j) {
-    return 0;
-  } else {
-    if (i < j) {
-      swap(i, j);
-    }
+  if (i > j) {
     return (2*neq-1-i)*i/2+(j-i)+neq-1+neq*(neq-1)/2;
+  } else if (i < j) {
+    return (2*neq-1-j)*j/2+(i-j)+neq-1+neq*(neq-1)/2;
+  } else {
+    return 0;
   }
 }
 
