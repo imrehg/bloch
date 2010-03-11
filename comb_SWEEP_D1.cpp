@@ -3,10 +3,8 @@ using namespace gmm;
 using namespace std;
 double phase=0;
 int pulse_average=100;
-using namespace std;
-using namespace gmm;
 const long double pi=3.14159265358979323846264338327950288419716939937511;
-const int npulse=10000000;
+const int npulse=10;
 int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 long double period0=10.87827757077666562510422409751326305981252200206427;
 long double frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
@@ -122,7 +120,6 @@ void fun_Matrix(row_matrix< wsvector<long double> > &Trans,col_matrix< rsvector<
    }
  }   // Bloch eq for off diagonal real part
 
-
  for (int j=1;j<neq;j++){
    for (int i=0;i<j;i++){
        Trans(ImagComp(i,j),ImagComp(i,j))=-(R[i]+R[j]+R_L[i])/2-Rc[i][j];
@@ -143,14 +140,14 @@ void solve_Martix(col_matrix< rsvector<long double> >&M, row_matrix< wsvector<lo
   col_matrix< rsvector<long double> > Msub(neq,neq);
 
   for(int t=1;t<(ninterval_1+ninterval_2)+1;t++){
-//      clean(Trans,1E-10);
+      clean(Trans,1E-10);
       clear(Trans_B);
       clear(Trans_D);
       clear(Trans_E);
       clear(Trans_I);
       clear(Trans_C);
       clear(Trans_E_R);
-
+ cout<<t<<endl;
        for(int i=0;i<neq*neq;i++){
              Trans_I(i,i)=1;
              Trans_B(i,i)=1;
@@ -162,11 +159,11 @@ void solve_Martix(col_matrix< rsvector<long double> >&M, row_matrix< wsvector<lo
       copy(Trans_E,Trans_E_R);
 
       for(int j=1;j<=nexp;j++){
-//        clean(Trans_C,1E-10);
-//        clean(Trans_E_R,1E-10);
-//        clean(Trans_I,1E-10);
-        mult(Trans_E_R,Trans_I,Trans_C);
-        copy(Trans_C,Trans_I);
+        clean(Trans_C,1E-10);
+        clean(Trans_E_R,1E-10);
+        clean(Trans_I,1E-10);
+          mult(Trans_E_R,Trans_I,Trans_C);
+          copy(Trans_C,Trans_I);
 
          for(int a=0;a<neq*neq;a++)
              for(int b=0;b<neq*neq;b++)
@@ -227,6 +224,7 @@ int sweep(int steps,int total_steps,long double PeakPower,long double convergenc
         }
   //initialzing the energy level difference for D2 line
 
+
       for(int j=3; j<5;j++)
          for(int k=-j;k<j+1;k++)
              for(int m=3; m<5;m++)
@@ -238,10 +236,9 @@ int sweep(int steps,int total_steps,long double PeakPower,long double convergenc
 
 
 
-
-#pragma omp num_threads(2)
-#pragma omp parallel for
-for(int thread=0;thread<2;thread++)
+//#pragma omp num_threads(2)
+//#pragma omp parallel for
+for(int thread=0;thread<1;thread++)
 {
    long double *Time= new long double[ninterval_1+ninterval_2+1];
    col_matrix< rsvector<long double> > M(neq,(ninterval_1+ninterval_2+1)*neq);//Rabifrequence*2
@@ -308,15 +305,20 @@ for(int m=0;m<=steps;m++)
 
               buffer= Time[k]-period*int(Time[k]/period);
 
-  for(int i=0; i<2;i++)
+
      for(int j=3; j<5;j++)
         for(int t=-j;t<j+1;t++)
-          for(int l=0; l<2;l++)
             for(int m=3; m<5;m++)
-               for(int n=-m;n<m+1;n++)
-                     M(D1_coef(i,j,t),k*neq+D1_coef(l,m,n))+=(atom.coef(+1,i,l,j,m,t,n,0.5,0.5,3.5)+atom.coef(-1,i,l,j,m,t,n,0.5,0.5,3.5))*ReRabi(buffer,period,peak);
-// //initailizing for M matrices
-
+               for(int n=-m;n<m+1;n++){
+                     M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(+1,1,0,j,m,t,n,0.5,0.5,3.5)+atom.coef(-1,1,0,j,m,t,n,0.5,0.5,3.5))*ReRabi(buffer,period,peak);
+                     M(D1_coef(0,m,n),k*neq+D1_coef(1,j,t))=M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n));
+               }
+               cout<<M;
+               int wkk;
+               cin>>wkk;
+//initailizing for M matrices
+//The reason to set the matrix this way(the second equation) is that actually calulated transition would be pure imaginary, but we set is to real(multiply a phase).
+//If we directly set M and run through the parameter, we will get a extra munus sign in the symmetric terms, which can't be used in the formalism applied in fun_matrix.
            }
 
 solve_Martix(M,Trans,Trans_AVE,Time,EnerDet);
