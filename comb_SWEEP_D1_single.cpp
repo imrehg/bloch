@@ -133,52 +133,100 @@ void fun_Matrix(row_matrix< wsvector<long double> > &Trans,col_matrix< rsvector<
 
 }
 
-void solve_Martix(col_matrix< rsvector<long double> >&M, row_matrix< wsvector<long double> >&Trans, row_matrix< wsvector<long double> >&Trans_Ave,long double *T, row_matrix< wsvector<long double> >&D)// solve(presultI,presultR,M,k)
+void solve_Martix(col_matrix< rsvector<long double> >&M, col_matrix< wsvector<long double> >&Trans, row_matrix< wsvector<long double> >&Trans_Ave,long double *T, row_matrix< wsvector<long double> >&D)// solve(presultI,presultR,M,k)
 {
-  row_matrix< wsvector<long double> > Trans_B(neq*neq,neq*neq),Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_D(neq*neq,neq*neq);
-  row_matrix< rsvector<long double> > Trans_E_R(neq*neq,neq*neq);
-  col_matrix< rsvector<long double> > Msub(neq,neq);
+//  row_matrix< wsvector<long double> > Trans_B(neq*neq,neq*neq),Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_D(neq*neq,neq*neq);
+//  row_matrix< rsvector<long double> > Trans_E_R(neq*neq,neq*neq);
+    row_matrix< wsvector<long double> > Trans_E(neq*neq,neq*neq);
+    col_matrix< rsvector<long double> > Msub(neq,neq);
 
   for(int t=1;t<(ninterval_1+ninterval_2)+1;t++){
-      clean(Trans,1E-10);
-      clear(Trans_B);
-      clear(Trans_D);
+//      clean(Trans,1E-12);
+//      clear(Trans_B);
+//      clear(Trans_D);
       clear(Trans_E);
-      clear(Trans_I);
-      clear(Trans_C);
-      clear(Trans_E_R);
- cout<<t<<endl;
-       for(int i=0;i<neq*neq;i++){
-             Trans_I(i,i)=1;
-             Trans_B(i,i)=1;
-       }
+//      clear(Trans_I);
+//      clear(Trans_C);
+//      clear(Trans_E_R);
+       cout<<t<<endl;
+//       for(int i=0;i<neq*neq;i++){
+//             Trans_I(i,i)=1;
+//             Trans_B(i,i)=1;
+//       }
 
-     copy(sub_matrix(M,sub_interval(0,neq),sub_interval((t-1)*neq,neq)),Msub);
+      copy(sub_matrix(M,sub_interval(0,neq),sub_interval((t-1)*neq,neq)),Msub);
 
       fun_Matrix(Trans_E,Msub,D);
-      copy(Trans_E,Trans_E_R);
 
-      for(int j=1;j<=nexp;j++){
-        clean(Trans_C,1E-10);
-        clean(Trans_E_R,1E-10);
-        clean(Trans_I,1E-10);
-          mult(Trans_E_R,Trans_I,Trans_C);
-          copy(Trans_C,Trans_I);
+      for(int k=0;k<neq*neq;k++)
+        for(int l=0;l<neq*neq;l++)
+            Trans(k,l+(t-1)*(neq*neq))=Trans_E(k,l);
+//      copy(Trans_E,Trans_E_R);
 
-         for(int a=0;a<neq*neq;a++)
-             for(int b=0;b<neq*neq;b++)
-                      Trans_B(a,b)+=Trans_I(a,b)*pow((T[t]-T[t-1]),j)/factorial(j);
-      }
-
-        add(Trans_B,Trans_Ave);
-        mult(Trans_B,Trans,Trans_D);
-        copy(Trans_D,Trans);
+//      for(int j=1;j<=nexp;j++){
+//        clean(Trans_C,1E-12);
+//        clean(Trans_E_R,1E-12);
+//        clean(Trans_I,1E-12);
+//          mult(Trans_E_R,Trans_I,Trans_C);
+//          copy(Trans_C,Trans_I);
+//
+//         for(int a=0;a<neq*neq;a++)
+//             for(int b=0;b<neq*neq;b++)
+//                      Trans_B(a,b)+=Trans_I(a,b)*pow((T[t]-T[t-1]),j)/factorial(j);
+//      }
+//
+//        add(Trans_B,Trans_Ave);
+//        mult(Trans_B,Trans,Trans_D);
+//        copy(Trans_D,Trans);
 
       }
 //      cout<<Trans;
 //
 }
 
+void pulse_step (col_matrix< wsvector<long double> > &Trans, wsvector<long double> &result,long double *T){
+
+ row_matrix< rsvector<long double> > Trans_sub(neq*neq,neq*neq);
+ wsvector<long double> result_buf(neq*neq),result_buf_tol(neq*neq);
+
+ for(int t=0;t<(ninterval_1+ninterval_2);t++){
+   clear(result_buf_tol);
+   clear(Trans_sub);
+   copy(sub_matrix(Trans,sub_interval(0,neq*neq),sub_interval((t)*neq*neq,neq*neq)),Trans_sub);
+cout<<"t="<<t<<endl;
+    copy(result,result_buf_tol);
+   for (int i=1;i<(nexp+1);i++){
+     mult(Trans_sub,result,result_buf);
+     copy(result_buf,result);
+     add(scaled(result,pow((T[t+1]-T[t]),i)/factorial(i)),result_buf_tol);
+   }
+   copy(result_buf_tol,result);
+ }
+
+}
+
+void pulse_ave (col_matrix< wsvector<long double> > &Trans, wsvector<long double> &result,long double *T){
+
+ row_matrix< rsvector<long double> > Trans_sub(neq*neq,neq*neq);
+ wsvector<long double> result_buf(neq*neq),result_buf_tol(neq*neq),result_sum(neq*neq);
+
+ for(int t=0;t<(ninterval_1+ninterval_2);t++){
+   clear(result_buf_tol);
+   clear(Trans_sub);
+   copy(sub_matrix(Trans,sub_interval(0,neq*neq),sub_interval((t)*neq*neq,neq*neq)),Trans_sub);
+   copy(result,result_buf_tol);
+   for (int i=1;i<(nexp+1);i++){
+     mult(Trans_sub,result,result_buf);
+     copy(result_buf,result);
+     add(scaled(result,pow((T[t+1]-T[t]),i)/factorial(i)),result_buf_tol);
+   }
+   copy(result_buf_tol,result);
+   add(result,result_sum);
+ }
+  copy(result_sum,result);
+  scale(result,(1.0/(ninterval_1+ninterval_2)));
+
+}
 
 int D1_coef (int L,int F,int mf){
      if(F==3)
@@ -257,7 +305,8 @@ for(int m=0;m<=steps;m++)
    interval_2=period-interval_1;
    dt_2=interval_2/ninterval_2;
 
-    row_matrix< wsvector<long double> > Trans(neq*neq,neq*neq),Trans_AVE(neq*neq,neq*neq);
+    col_matrix< wsvector<long double> > Trans(neq*neq,neq*neq*(ninterval_1+ninterval_2));
+    row_matrix< wsvector<long double> > Trans_AVE(neq*neq,neq*neq);
     col_matrix< wsvector<long double> > Result(neq*neq,pulse_average+1);
     row_matrix< rsvector<long double> > TransFinal(neq*neq,neq*neq);
 
@@ -313,32 +362,35 @@ for(int m=0;m<=steps;m++)
                      M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(+1,1,0,j,m,t,n,0.5,0.5,3.5)+atom.coef(-1,1,0,j,m,t,n,0.5,0.5,3.5))*ReRabi(buffer,period,peak);
                      M(D1_coef(0,m,n),k*neq+D1_coef(1,j,t))=M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n));
                }
-               cout<<M;
-               int wkk;
-               cin>>wkk;
 //initailizing for M matrices
 //The reason to set the matrix this way(the second equation) is that actually calulated transition would be pure imaginary, but we set is to real(multiply a phase).
 //If we directly set M and run through the parameter, we will get a extra munus sign in the symmetric terms, which can't be used in the formalism applied in fun_matrix.
            }
 
 solve_Martix(M,Trans,Trans_AVE,Time,EnerDet);
-copy(Trans,TransFinal);
+//copy(Trans,TransFinal);
 
 cout<<"end of solve"<<endl;
 int k=0,flag=0;
 double diff=0;
-
+wsvector<long double> bufferR(neq*neq);
 if(m==0){
   while(flag<pulse_average){
+  cout<<k<<endl;
+     clear(bufferR);
 
       for(int a=0;a<neq;a++)
            for(int b=0;b<neq;b++){
            Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
            Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
 
-           mult(TransFinal,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
+           copy(mat_col(Result,(k)%(pulse_average+1)),bufferR);
+           pulse_step (Trans,bufferR,Time);
+           copy(bufferR,mat_col(Result,(k+1)%(pulse_average+1)));
 
+//           mult(TransFinal,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
            k+=1;
+
       if(k>pulse_average){
           diff=0;
           for(int c=0;c<neq;c++){
@@ -359,12 +411,19 @@ if(m==0){
 
   while(flag<pulse_average){
 
+    clear(bufferR);
+
       for(int a=0;a<neq;a++)
            for(int b=0;b<neq;b++){
            Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
            Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
 
-           mult(TransFinal,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
+           copy(mat_col(Result,(k)%(pulse_average+1)),bufferR);
+           pulse_step (Trans,bufferR,Time);
+           copy(bufferR,mat_col(Result,(k+1)%(pulse_average+1)));
+
+//           mult(TransFinal,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
+
            k+=1;
 
      if(k==ninterval_m)
@@ -377,12 +436,20 @@ if(m==0){
 
 long double buffer=0,buffer2=0,bufferC=0;
 
-            for(int d=0;d<neq*neq;d++){
-                  buffer+=Trans_AVE(1,d)*Result(d,k%(pulse_average+1));
-                  buffer2+=Trans_AVE(0,d)*Result(d,k%(pulse_average+1));
-                 }
+
+           copy(mat_col(Result,(k)%(pulse_average+1)),bufferR);
+           pulse_ave (Trans,bufferR,Time);
+           copy(bufferR,mat_col(Result,(k)%(pulse_average+1)));
+
+//            for(int d=0;d<neq*neq;d++){
+//                  buffer+=Trans_AVE(1,d)*Result(d,k%(pulse_average+1));
+//                  buffer2+=Trans_AVE(0,d)*Result(d,k%(pulse_average+1));
+//                 }
+buffer=mat_col(Result,(k)%(pulse_average+1))[0];
+buffer2=mat_col(Result,(k)%(pulse_average+1))[1];
+
             for(int c=0;c<neq;c++)
-                 bufferC+=Result(c,k%(pulse_average+1));
+                 bufferC+=mat_col(Result,(k)%(pulse_average+1))[neq];
 
        buffer=buffer/(ninterval_1+ninterval_2+1);
        buffer2=buffer2/(ninterval_1+ninterval_2+1);
