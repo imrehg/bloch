@@ -1,5 +1,6 @@
 CC=g++
-CXXFLAGS=-O3 -fopenmp
+CXXFLAGS=-O3 -llapack -lblas -fopenmp 
+LATLAS=/usr/lib/atlas/liblapack.a /usr/lib/atlas/libblas.a -latlas
 LDFLAGS=-o
 MAIN=comb_SWEEP_D1_main.cpp
 D1=comb_SWEEP_D1.cpp
@@ -10,9 +11,9 @@ EXECUTABLE=comb
 all: $(O) $(O2) final
 	
 $(O): atom.cpp comb.h $(MAIN)
-	$(CC) -c $(CXXFLAGS) $(MAIN)
+	$(CC) -c $(MAIN) $(CXXFLAGS)
 
 $(O2): atom.cpp comb.h $(D1)
-	$(CC) -c $(CXXFLAGS) $(D1)
+	$(CC) -c $(D1) $(CXXFLAGS)
 final:
-	$(CC) $(LDFLAGS) $(EXECUTABLE) $(CXXFLAGS) $(O) $(O2) 
+	$(CC) $(LDFLAGS) $(EXECUTABLE) $(O) $(O2) $(CXXFLAGS)

@@ -1,24 +1,23 @@
+#define GMM_USES_LAPACK
 #include "comb.h"
-using namespace gmm;
-using namespace std;
-double phase=0;
+doub phase=0;
 int pulse_average=100;
-const long double pi=3.14159265358979323846264338327950288419716939937511;
-const int npulse=10;
+const doub pi=3.14159265358979323846264338327950288419716939937511;
+const int npulse=100;
 int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
-long double period0=10.87827757077666562510422409751326305981252200206427;
-long double frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
+doub period0=10.87827757077666562510422409751326305981252200206427;
+doub frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
 const int  neq=32,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 int nexp=12;
-rsvector<long double> r(neq);
+vector<doub> r(neq);
 //total decay constant
-rsvector<long double> R(neq);
+vector<doub> R(neq);
 //relaxation rate
-row_matrix< rsvector<long double> > Rc(neq,neq);
-row_matrix< rsvector<long double> > A(neq,neq);
-rsvector<long double> R_L(neq);
-long double lasDe = 0;
-rsvector<long double> EnergyDiff(neq-1);
+col_matrix< vector<doub> > Rc(neq,neq);
+col_matrix< vector<doub> > A(neq,neq);
+vector<doub> R_L(neq);
+doub lasDe = 0;
+vector<doub> EnergyDiff(neq-1);
 
 
 int RealComp(int i,int j)
@@ -53,9 +52,9 @@ int factorial (int num)
  return factorial(num-1)*num; // recursive call
 }
 
-long double ReRabi(long double x,long double period,long double peak)//脈衝包絡線函數(實部)，高斯函數*Re[e^{-i*phase}]
+doub ReRabi(doub x,doub period,doub peak)//脈衝包絡線函數(實部)，高斯函數*Re[e^{-i*phase}]
 {
-  long double value=0,time=0,factor=0;
+  doub value=0,time=0,factor=0;
   int i=0;
   if(x<0.5*period)
     value=exp(-pow(x/FWHM,2))*cos(-i*phase);
@@ -67,9 +66,9 @@ long double ReRabi(long double x,long double period,long double peak)//脈衝包
   return peak*value;
 }
 
-long double ImRabi(long double x,long double period,long double peak)//脈衝包絡線函數(虛部)，高斯函數*Im[e^{-i*phase}]
+doub ImRabi(doub x,doub period,doub peak)//脈衝包絡線函數(虛部)，高斯函數*Im[e^{-i*phase}]
 {
-  long double value=0,time=0,factor=0;
+  doub value=0,time=0,factor=0;
   int i=0;
   if(x<0.5*period)
     value=exp(-pow(x/FWHM,2))*sin(-i*phase);
@@ -83,17 +82,17 @@ long double ImRabi(long double x,long double period,long double peak)//脈衝包
 }
 
 
-void fun_Matrix(row_matrix< wsvector<long double> > &Trans,col_matrix< rsvector<long double> >&H,row_matrix< wsvector<long double> >&D)//B imaginary part ; C real part; H rabi requence; w time
+void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,col_matrix< vector<doub> >&D)//B imaginary part ; C real part; H rabi requence; w time
 {
 
   for (int i=0;i<neq;i++){
      Trans(RealComp(i,i),RealComp(i,i))=-r[i];
      for (int j=0;j<neq;j++){
           if(i<j){
-          Trans(RealComp(i,i),ImagComp(i,j))+=2*H[j][i];
+          Trans(RealComp(i,i),ImagComp(i,j))+=2*H(j,i);
           } else{
               if(i>j)
-              Trans(RealComp(i,i),ImagComp(i,j))+=-2*H[j][i];
+              Trans(RealComp(i,i),ImagComp(i,j))+=-2*H(j,i);
           }
           Trans(RealComp(i,i),RealComp(j,j))+=A(i,j);
       }
@@ -105,16 +104,16 @@ void fun_Matrix(row_matrix< wsvector<long double> > &Trans,col_matrix< rsvector<
        Trans(RealComp(i,j),ImagComp(i,j))=D(i,j);
        for (int l=0;l<neq;l++){
            if(l<j){
-             Trans(RealComp(i,j),ImagComp(l,j))+=-H[i][l];
+             Trans(RealComp(i,j),ImagComp(l,j))+=-H(i,l);
            } else{
               if(l>j)
-                Trans(RealComp(i,j),ImagComp(l,j))+=H[i][l];
+                Trans(RealComp(i,j),ImagComp(l,j))+=H(i,l);
            }
            if(i<l){
-             Trans(RealComp(i,j),ImagComp(i,l))+=H[l][j];
+             Trans(RealComp(i,j),ImagComp(i,l))+=H(l,j);
            } else{
               if(l>i)
-              Trans(RealComp(i,j),ImagComp(i,l))+=-H[l][j];
+              Trans(RealComp(i,j),ImagComp(i,l))+=-H(l,j);
            }
          }
    }
@@ -122,25 +121,27 @@ void fun_Matrix(row_matrix< wsvector<long double> > &Trans,col_matrix< rsvector<
 
  for (int j=1;j<neq;j++){
    for (int i=0;i<j;i++){
-       Trans(ImagComp(i,j),ImagComp(i,j))=-(R[i]+R[j]+R_L[i])/2-Rc[i][j];
+       Trans(ImagComp(i,j),ImagComp(i,j))=-(R[i]+R[j]+R_L[i])/2-Rc(i,j);
        Trans(ImagComp(i,j),RealComp(i,j))=-D(i,j);
       for (int l=0;l<neq;l++){
-            Trans(ImagComp(i,j),RealComp(l,j))+=H[i][l];
-            Trans(ImagComp(i,j),RealComp(i,l))+=-H[l][j];
+            Trans(ImagComp(i,j),RealComp(l,j))+=H(i,l);
+            Trans(ImagComp(i,j),RealComp(i,l))+=-H(l,j);
       }
     }
   }    //  Bloch eq for off diagonal imaginary part
 
 }
 
-void solve_Martix(col_matrix< rsvector<long double> >&M, row_matrix< wsvector<long double> >&Trans, row_matrix< wsvector<long double> >&Trans_Ave,long double *T, row_matrix< wsvector<long double> >&D)// solve(presultI,presultR,M,k)
+void solve_Martix(col_matrix< vector<doub> >&M, dense_matrix<doub> &Trans, col_matrix< vector<doub> >&Trans_Ave,doub *T, col_matrix< vector<doub> >&D)// solve(presultI,presultR,M,k)
 {
-  row_matrix< wsvector<long double> > Trans_B(neq*neq,neq*neq),Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_D(neq*neq,neq*neq);
-  row_matrix< rsvector<long double> > Trans_E_R(neq*neq,neq*neq);
-  col_matrix< rsvector<long double> > Msub(neq,neq);
+  col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq);
+  col_matrix< vector<doub> > Trans_E_R(neq*neq,neq*neq);
+  col_matrix< vector<doub> > Msub(neq,neq);
+  dense_matrix <doub> Trans_D(neq*neq,neq*neq),Trans_B(neq*neq,neq*neq);
 
   for(int t=1;t<(ninterval_1+ninterval_2)+1;t++){
-      clean(Trans,1E-10);
+//      clean(Trans,1E-6);
+   time_t start=clock();
       clear(Trans_B);
       clear(Trans_D);
       clear(Trans_E);
@@ -154,26 +155,27 @@ void solve_Martix(col_matrix< rsvector<long double> >&M, row_matrix< wsvector<lo
        }
 
      copy(sub_matrix(M,sub_interval(0,neq),sub_interval((t-1)*neq,neq)),Msub);
-
       fun_Matrix(Trans_E,Msub,D);
       copy(Trans_E,Trans_E_R);
+//      clean(Trans_E_R,1E-6);
 
       for(int j=1;j<=nexp;j++){
-        clean(Trans_C,1E-10);
-        clean(Trans_E_R,1E-10);
-        clean(Trans_I,1E-10);
+//          clean(Trans_I,1E-10);
           mult(Trans_E_R,Trans_I,Trans_C);
           copy(Trans_C,Trans_I);
+          add(scaled(Trans_I,pow((T[t]-T[t-1]),j)/factorial(j)),Trans_B);
 
-         for(int a=0;a<neq*neq;a++)
-             for(int b=0;b<neq*neq;b++)
-                      Trans_B(a,b)+=Trans_I(a,b)*pow((T[t]-T[t-1]),j)/factorial(j);
+//      for(int a=0;a<neq*neq;a++)
+//             for(int b=0;b<neq*neq;b++)
+//                      Trans_B(a,b)+=Trans_I(a,b)*pow((T[t]-T[t-1]),j)/factorial(j);
       }
-
+//        clean(Trans,1E-60);
         add(Trans_B,Trans_Ave);
+
         mult(Trans_B,Trans,Trans_D);
         copy(Trans_D,Trans);
-
+        cout<<"nnz="<<nnz(Trans)<<endl;
+            cout<<(clock()-start)*1.0/CLOCKS_PER_SEC<<endl;
       }
 //      cout<<Trans;
 //
@@ -188,11 +190,11 @@ int D1_coef (int L,int F,int mf){
  }
 
 
-int sweep(int steps,int total_steps,long double PeakPower,long double convergence,int conS,int expN,int n1, int n2,long double detune)
+int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int expN,int n1, int n2,doub detune)
 {
 
 
-  long double phase=0;
+  doub phase=0;
   ninterval_1 =n1;
   ninterval_2 =n2;
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
@@ -207,11 +209,11 @@ int sweep(int steps,int total_steps,long double PeakPower,long double convergenc
   file1.open("inputMP.txt", ios::out | ios::trunc);
   file2.precision(15);
   pulse_average=conS;
-  row_matrix< rsvector<long double> > y0I(neq,neq);
+  col_matrix< vector<doub> > y0I(neq,neq);
   //initial condition
-  row_matrix< rsvector<long double> > y0R(neq,neq);
+  col_matrix< vector<doub> > y0R(neq,neq);
   //initial condiion
-  row_matrix< wsvector<long double> > EnerDet(neq,neq);
+  col_matrix< vector<doub> > EnerDet(neq,neq);
   Atom atom;
 
    EnergyDiff[8]=0.2012871;
@@ -240,8 +242,8 @@ int sweep(int steps,int total_steps,long double PeakPower,long double convergenc
 //#pragma omp parallel for
 for(int thread=0;thread<1;thread++)
 {
-   long double *Time= new long double[ninterval_1+ninterval_2+1];
-   col_matrix< rsvector<long double> > M(neq,(ninterval_1+ninterval_2+1)*neq);//Rabifrequence*2
+   doub *Time= new doub[ninterval_1+ninterval_2+1];
+   col_matrix< vector<doub> > M(neq,(ninterval_1+ninterval_2+1)*neq);//Rabifrequence*2
    int ninterval_m = (npulse-1);
 
 
@@ -249,17 +251,18 @@ for(int m=0;m<=steps;m++)
 {
 
    cout<<m<<endl;
-   long double De=m*(pow(-1,omp_get_thread_num()))*1.0/total_steps;
-   long double period=10.87827757077666562510422409751326305981252200206427/100*(100+De);
-   long double peak=peakO*(100+De)/100;
-   long double interval_1=FWHM*10,interval_2=period-interval_1;
-   long double dt_1=interval_1/ninterval_1,dt_2=interval_2/ninterval_2;
+   doub De=m*(pow(-1,omp_get_thread_num()))*1.0/total_steps;
+   doub period=10.87827757077666562510422409751326305981252200206427/100*(100+De);
+   doub peak=peakO*(100+De)/100;
+   doub interval_1=FWHM*10,interval_2=period-interval_1;
+   doub dt_1=interval_1/ninterval_1,dt_2=interval_2/ninterval_2;
    interval_2=period-interval_1;
    dt_2=interval_2/ninterval_2;
 
-    row_matrix< wsvector<long double> > Trans(neq*neq,neq*neq),Trans_AVE(neq*neq,neq*neq);
-    col_matrix< wsvector<long double> > Result(neq*neq,pulse_average+1);
-    row_matrix< rsvector<long double> > TransFinal(neq*neq,neq*neq);
+    col_matrix< vector<doub> > Result(neq*neq,pulse_average+1);
+    dense_matrix<doub> Trans(neq*neq,neq*neq);
+    col_matrix< vector<doub> > Trans_AVE(neq*neq,neq*neq);
+
 
 
    for(int i=16; i<32;i++)
@@ -291,7 +294,7 @@ for(int m=0;m<=steps;m++)
 
     for(int k=0;k<(ninterval_1+ninterval_2+1);k++){
 
-            long double buffer=0;
+            doub buffer=0;
 
             if( k%(ninterval_2+ninterval_1)>=ninterval_1/2 && (ninterval_2+ninterval_1/2)>k%(ninterval_2+ninterval_1) )
                buffer=dt_2;
@@ -313,20 +316,18 @@ for(int m=0;m<=steps;m++)
                      M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(+1,1,0,j,m,t,n,0.5,0.5,3.5)+atom.coef(-1,1,0,j,m,t,n,0.5,0.5,3.5))*ReRabi(buffer,period,peak);
                      M(D1_coef(0,m,n),k*neq+D1_coef(1,j,t))=M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n));
                }
-               cout<<M;
-               int wkk;
-               cin>>wkk;
+
 //initailizing for M matrices
 //The reason to set the matrix this way(the second equation) is that actually calulated transition would be pure imaginary, but we set is to real(multiply a phase).
 //If we directly set M and run through the parameter, we will get a extra munus sign in the symmetric terms, which can't be used in the formalism applied in fun_matrix.
            }
 
 solve_Martix(M,Trans,Trans_AVE,Time,EnerDet);
-copy(Trans,TransFinal);
+
 
 cout<<"end of solve"<<endl;
 int k=0,flag=0;
-double diff=0;
+doub diff=0;
 
 if(m==0){
   while(flag<pulse_average){
@@ -336,7 +337,7 @@ if(m==0){
            Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
            Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
 
-           mult(TransFinal,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
+           mult(Trans,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
 
            k+=1;
       if(k>pulse_average){
@@ -364,7 +365,7 @@ if(m==0){
            Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
            Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
 
-           mult(TransFinal,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
+           mult(Trans,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
            k+=1;
 
      if(k==ninterval_m)
@@ -375,7 +376,7 @@ if(m==0){
 
 
 
-long double buffer=0,buffer2=0,bufferC=0;
+doub buffer=0,buffer2=0,bufferC=0;
 
             for(int d=0;d<neq*neq;d++){
                   buffer+=Trans_AVE(1,d)*Result(d,k%(pulse_average+1));
