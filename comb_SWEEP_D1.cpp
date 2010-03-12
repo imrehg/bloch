@@ -3,7 +3,7 @@
 doub phase=0;
 int pulse_average=100;
 const doub pi=3.14159265358979323846264338327950288419716939937511;
-const int npulse=100;
+const int npulse=1000;
 int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 doub period0=10.87827757077666562510422409751326305981252200206427;
 doub frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
@@ -135,50 +135,41 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
 void solve_Martix(col_matrix< vector<doub> >&M, dense_matrix<doub> &Trans, col_matrix< vector<doub> >&Trans_Ave,doub *T, col_matrix< vector<doub> >&D)// solve(presultI,presultR,M,k)
 {
   col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq);
-  col_matrix< vector<doub> > Trans_E_R(neq*neq,neq*neq);
   col_matrix< vector<doub> > Msub(neq,neq);
-  dense_matrix <doub> Trans_D(neq*neq,neq*neq),Trans_B(neq*neq,neq*neq);
+  dense_matrix<doub> Trans_D(neq*neq,neq*neq),Trans_B(neq*neq,neq*neq);
 
   for(int t=1;t<(ninterval_1+ninterval_2)+1;t++){
-//      clean(Trans,1E-6);
-   time_t start=clock();
+
+
       clear(Trans_B);
       clear(Trans_D);
       clear(Trans_E);
       clear(Trans_I);
       clear(Trans_C);
-      clear(Trans_E_R);
- cout<<t<<endl;
+      cout<<t<<endl;
+
        for(int i=0;i<neq*neq;i++){
              Trans_I(i,i)=1;
              Trans_B(i,i)=1;
        }
 
-     copy(sub_matrix(M,sub_interval(0,neq),sub_interval((t-1)*neq,neq)),Msub);
+      copy(sub_matrix(M,sub_interval(0,neq),sub_interval((t-1)*neq,neq)),Msub);
       fun_Matrix(Trans_E,Msub,D);
-      copy(Trans_E,Trans_E_R);
-//      clean(Trans_E_R,1E-6);
+//    copy(Trans_E,Trans_E_R);
 
       for(int j=1;j<=nexp;j++){
-//          clean(Trans_I,1E-10);
-          mult(Trans_E_R,Trans_I,Trans_C);
+          mult(Trans_E,Trans_I,Trans_C);
           copy(Trans_C,Trans_I);
           add(scaled(Trans_I,pow((T[t]-T[t-1]),j)/factorial(j)),Trans_B);
-
-//      for(int a=0;a<neq*neq;a++)
-//             for(int b=0;b<neq*neq;b++)
-//                      Trans_B(a,b)+=Trans_I(a,b)*pow((T[t]-T[t-1]),j)/factorial(j);
       }
-//        clean(Trans,1E-60);
+        time_t start=clock();
         add(Trans_B,Trans_Ave);
-
         mult(Trans_B,Trans,Trans_D);
         copy(Trans_D,Trans);
-        cout<<"nnz="<<nnz(Trans)<<endl;
-            cout<<(clock()-start)*1.0/CLOCKS_PER_SEC<<endl;
-      }
-//      cout<<Trans;
-//
+        cout<<"nnz="<<nnz(Trans_E)<<endl;
+        cout<<(clock()-start)*1.0/CLOCKS_PER_SEC<<endl;
+
+  }
 }
 
 
@@ -247,7 +238,7 @@ for(int thread=0;thread<1;thread++)
    int ninterval_m = (npulse-1);
 
 
-for(int m=0;m<=steps;m++)
+for(int m=-steps;m<=steps;m++)
 {
 
    cout<<m<<endl;
