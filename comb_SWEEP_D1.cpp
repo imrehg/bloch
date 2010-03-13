@@ -161,6 +161,9 @@ void solve_Martix(col_matrix< vector<doub> >&M, dense_matrix<doub> &Trans, col_m
           mult(Trans_E,Trans_I,Trans_C);
           copy(Trans_C,Trans_I);
           add(scaled(Trans_I,pow((T[t]-T[t-1]),j)/factorial(j)),Trans_B);
+//          cout<<"nnzE="<<nnz(Trans_E)<<endl;
+//          cout<<"nnzI="<<nnz(Trans_I)<<endl;
+//          cout<<"nnzC="<<nnz(Trans_C)<<endl;
       }
         time_t start=clock();
         add(Trans_B,Trans_Ave);
@@ -369,9 +372,10 @@ if(m==0){
 
 doub buffer=0,buffer2=0,bufferC=0;
 
+           for (int j=0;j<16;j++)
             for(int d=0;d<neq*neq;d++){
-                  buffer+=Trans_AVE(1,d)*Result(d,k%(pulse_average+1));
-                  buffer2+=Trans_AVE(0,d)*Result(d,k%(pulse_average+1));
+                  buffer+=Trans_AVE(j,d)*Result(d,k%(pulse_average+1));
+//                  buffer2+=Trans_AVE(0,d)*Result(d,k%(pulse_average+1));
                  }
             for(int c=0;c<neq;c++)
                  bufferC+=Result(c,k%(pulse_average+1));
@@ -381,7 +385,7 @@ doub buffer=0,buffer2=0,bufferC=0;
 
        file2<<setiosflags(ios::left)<<setw(30)<<1/period;
        file2<<setiosflags(ios::left)<<setw(30)<<buffer;
-       file2<<setiosflags(ios::left)<<setw(30)<<buffer2;
+//       file2<<setiosflags(ios::left)<<setw(30)<<buffer2;
        file2<<setiosflags(ios::left)<<setw(30)<<bufferC;
        file2<<setiosflags(ios::left)<<setw(30)<<k;
        file2<<setiosflags(ios::left)<<setw(30)<<m<<endl;

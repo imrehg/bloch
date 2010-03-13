@@ -17,3 +17,6 @@ $(O2): atom.cpp comb.h $(D1)
 	$(CC) -c $(D1) $(CXXFLAGS)
 final:
 	$(CC) $(LDFLAGS) $(EXECUTABLE) $(O) $(O2) $(CXXFLAGS)
+
+clean:
+	rm *.o

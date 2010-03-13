@@ -24,9 +24,9 @@ int main(){
     fstream file1;
     file1.open("Matrix_Benchmark.txt", ios::out | ios::trunc);
 
-    int n=300;
+    int n=500;
     double con=0.05;
-    int time=5;
+    int time=1;
 
     file1<<setiosflags(ios::left)<<setw(30)<<"Matrix connectivity"<<setiosflags(ios::left)<<setw(30)<<"Lapack Matrix"<<setiosflags(ios::left)<<setw(30)<<"Gmm dense Matrix"<<setiosflags(ios::left)<<setw(30)<<"Gmm read sparse col Matrix"<<setiosflags(ios::left)<<setw(30)<<"Gmm write sparse col Matrix"<<endl;
     dense_matrix<doub>  A(n,n);
@@ -47,6 +47,8 @@ int main(){
 
 
 for (int i=1;i<11;i++){
+    clear(A);
+    clear(B);
     cout<<i*0.1<<endl;
     file1<<setiosflags(ios::left)<<setw(30)<<i*0.1;
     con=i*0.1;
@@ -70,8 +72,10 @@ for (int i=1;i<11;i++){
 
     time_t T1=clock(),T2;
 
-    for(int i=0;i<time;i++)
+    for(int i=0;i<time;i++){
         mult(A,B,C);
+        copy(scaled(C,0.5),A);
+    }
 
     T2=clock();
 
@@ -79,27 +83,30 @@ for (int i=1;i<11;i++){
 
     T1=clock();
 
-    for(int i=0;i<time;i++)
+    for(int i=0;i<time;i++){
         mult(A2,B2,C2);
-
+        copy(scaled(C2,0.5),A2);
+    }
     T2=clock();
 
     file1<<setiosflags(ios::left)<<setw(30)<<(T2-T1)*1.0/CLOCKS_PER_SEC/time;
 
     T1=clock();
 
-    for(int i=0;i<time;i++)
+    for(int i=0;i<time;i++){
         mult(A3,B3,C3);
-
+        copy(scaled(C3,0.5),A3);
+    }
     T2=clock();
 
     file1<<setiosflags(ios::left)<<setw(30)<<(T2-T1)*1.0/CLOCKS_PER_SEC/time;
 
     T1=clock();
 
-    for(int i=0;i<time;i++)
+    for(int i=0;i<time;i++){
         mult(A4,B4,C4);
-
+        copy(scaled(C4,0.5),A4);
+    }
     T2=clock();
 
     file1<<setiosflags(ios::left)<<setw(30)<<(T2-T1)*1.0/CLOCKS_PER_SEC/time<<endl;
