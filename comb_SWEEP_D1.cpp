@@ -232,16 +232,16 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int
 
 
 
-//#pragma omp num_threads(2)
-//#pragma omp parallel for
-for(int thread=0;thread<1;thread++)
+#pragma omp num_threads(2)
+#pragma omp parallel for
+for(int thread=0;thread<2;thread++)
 {
    doub *Time= new doub[ninterval_1+ninterval_2+1];
    col_matrix< vector<doub> > M(neq,(ninterval_1+ninterval_2+1)*neq);//Rabifrequence*2
    int ninterval_m = (npulse-1);
 
 
-for(int m=-steps;m<=steps;m++)
+for(int m=0;m<=steps;m++)
 {
 
    cout<<m<<endl;
@@ -326,7 +326,7 @@ cout<<"end of solve"<<endl;
 int k=0,flag=0;
 doub diff=0;
 
-if(m==-steps){
+if(m==0){
   while(flag<pulse_average){
 
     for(int a=0;a<neq;a++)
