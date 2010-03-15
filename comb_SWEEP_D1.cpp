@@ -3,7 +3,7 @@
 doub phase=0;
 int pulse_average=100;
 const doub pi=3.14159265358979323846264338327950288419716939937511;
-const int npulse=1000;
+const int npulse=100000;
 int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 doub period0=10.87827757077666562510422409751326305981252200206427;
 doub frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
@@ -132,11 +132,11 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
 
 }
 
-void solve_Martix(col_matrix< vector<doub> >&M, dense_matrix<doub> &Trans, col_matrix< vector<doub> >&Trans_Ave,doub *T, col_matrix< vector<doub> >&D)// solve(presultI,presultR,M,k)
+void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans, col_matrix< vector<doub> >&Trans_Ave,doub *T, col_matrix< vector<doub> >&D)// solve(presultI,presultR,M,k)
 {
   col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq);
   col_matrix< vector<doub> > Msub(neq,neq);
-  dense_matrix<doub> Trans_D(neq*neq,neq*neq),Trans_B(neq*neq,neq*neq);
+  col_matrix<vector<doub> > Trans_D(neq*neq,neq*neq),Trans_B(neq*neq,neq*neq);
 
   for(int t=1;t<(ninterval_1+ninterval_2)+1;t++){
 
@@ -165,12 +165,12 @@ void solve_Martix(col_matrix< vector<doub> >&M, dense_matrix<doub> &Trans, col_m
 //          cout<<"nnzI="<<nnz(Trans_I)<<endl;
 //          cout<<"nnzC="<<nnz(Trans_C)<<endl;
       }
-        time_t start=clock();
+//        time_t start=clock();
         add(Trans_B,Trans_Ave);
         mult(Trans_B,Trans,Trans_D);
         copy(Trans_D,Trans);
-        cout<<"nnz="<<nnz(Trans_E)<<endl;
-        cout<<(clock()-start)*1.0/CLOCKS_PER_SEC<<endl;
+//        cout<<"nnz="<<nnz(Trans_E)<<endl;
+//        cout<<(clock()-start)*1.0/CLOCKS_PER_SEC<<endl;
 
   }
 }
@@ -254,7 +254,7 @@ for(int m=-steps;m<=steps;m++)
    dt_2=interval_2/ninterval_2;
 
     col_matrix< vector<doub> > Result(neq*neq,pulse_average+1);
-    dense_matrix<doub> Trans(neq*neq,neq*neq);
+    col_matrix<vector<doub> > Trans(neq*neq,neq*neq);
     col_matrix< vector<doub> > Trans_AVE(neq*neq,neq*neq);
 
 
@@ -288,27 +288,27 @@ for(int m=-steps;m<=steps;m++)
 
     for(int k=0;k<(ninterval_1+ninterval_2+1);k++){
 
-            doub buffer=0;
+      doub buffer=0;
 
-            if( k%(ninterval_2+ninterval_1)>=ninterval_1/2 && (ninterval_2+ninterval_1/2)>k%(ninterval_2+ninterval_1) )
-               buffer=dt_2;
-            else
-                buffer=dt_1;
+      if( k%(ninterval_2+ninterval_1)>=ninterval_1/2 && (ninterval_2+ninterval_1/2)>k%(ninterval_2+ninterval_1) )
+	buffer=dt_2;
+      else
+	buffer=dt_1;
 
-           if(k==0)
-              Time[k]=0;
-            else
-              Time[k]=Time[k-1]+buffer;
+      if(k==0)
+	Time[k]=0;
+      else
+	Time[k]=Time[k-1]+buffer;
 
-              buffer= Time[k]-period*int(Time[k]/period);
+      buffer= Time[k]-period*int(Time[k]/period);
 
 
-     for(int j=3; j<5;j++)
+      for(int j=3; j<5;j++)
         for(int t=-j;t<j+1;t++)
-            for(int m=3; m<5;m++)
-               for(int n=-m;n<m+1;n++){
-                     M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(+1,1,0,j,m,t,n,0.5,0.5,3.5)+atom.coef(-1,1,0,j,m,t,n,0.5,0.5,3.5))*ReRabi(buffer,period,peak);
-                     M(D1_coef(0,m,n),k*neq+D1_coef(1,j,t))=M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n));
+	  for(int m=3; m<5;m++)
+	    for(int n=-m;n<m+1;n++){
+	      M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(+0,1,0,j,m,t,n,0.5,0.5,3.5)+atom.coef(-0,1,0,j,m,t,n,0.5,0.5,3.5))/2*ReRabi(buffer,period,peak);
+	      M(D1_coef(0,m,n),k*neq+D1_coef(1,j,t))=M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n));
                }
 
 //initailizing for M matrices
@@ -323,72 +323,79 @@ cout<<"end of solve"<<endl;
 int k=0,flag=0;
 doub diff=0;
 
-if(m==0){
+if(m==-steps){
   while(flag<pulse_average){
 
-      for(int a=0;a<neq;a++)
-           for(int b=0;b<neq;b++){
-           Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
-           Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
+    for(int a=0;a<neq;a++)
+      for(int b=0;b<neq;b++){
+	Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
+	Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
 
-           mult(Trans,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
+    mult(Trans,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
+//    cout<<Trans<<endl;
+    k+=1;
 
-           k+=1;
-      if(k>pulse_average){
-          diff=0;
-          for(int c=0;c<neq;c++){
-            for(int d=0;d<neq;d++)
-              if(abs(1-Result(RealComp(c,d),(k%(pulse_average+1)))/(Result(RealComp(c,d),(k-pulse_average)%(pulse_average+1))))<convergence)
-                       diff+=1;
-          }
-        if(diff==neq*neq)
-              flag+=1;
-         else
-            flag=0;
-      }
-     if(k==ninterval_m)
-       flag=pulse_average+1;
+    if(k>pulse_average){
+      diff=0;
+
+  for(int c=0;c<neq;c++){
+	  for(int d=0;d<neq;d++){
+	      if(Result(RealComp(c,d),(k%(pulse_average+1)))==0)
+	         diff+=1;
+	       else if(abs(1.0-Result(RealComp(c,d),(k%(pulse_average+1)))/(Result(RealComp(c,d),(k-pulse_average)%(pulse_average+1))))<convergence)
+             diff+=1;
+	  }
+    }
+//          cout<<"diff="<<diff<<endl;
+      if(diff==neq*neq)
+	flag+=1;
+      else
+	flag=0;
+    }
+    if(k==ninterval_m)
+      flag=pulse_average+1;
   }
   ninterval_m = k;
 }else{
 
   while(flag<pulse_average){
 
-      for(int a=0;a<neq;a++)
-           for(int b=0;b<neq;b++){
-           Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
-           Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
+    for(int a=0;a<neq;a++)
+      for(int b=0;b<neq;b++){
+	Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
+	Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
 
-           mult(Trans,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
-           k+=1;
+    mult(Trans,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
+    k+=1;
 
-     if(k==ninterval_m)
-       flag=pulse_average+1;
+    if(k==ninterval_m)
+      flag=pulse_average+1;
   }
 
 }
 
-
+cout<<"npulse="<<k<<endl;
 
 doub buffer=0,buffer2=0,bufferC=0;
 
-           for (int j=0;j<16;j++)
-            for(int d=0;d<neq*neq;d++){
-                  buffer+=Trans_AVE(j,d)*Result(d,k%(pulse_average+1));
-//                  buffer2+=Trans_AVE(0,d)*Result(d,k%(pulse_average+1));
-                 }
-            for(int c=0;c<neq;c++)
-                 bufferC+=Result(c,k%(pulse_average+1));
+ for (int j=0;j<16;j++)
+   for(int d=0;d<neq*neq;d++){
+     buffer+=Trans_AVE(j,d)*Result(d,k%(pulse_average+1));
+     //                  buffer2+=Trans_AVE(0,d)*Result(d,k%(pulse_average+1));
+   }
+ for(int c=0;c<neq;c++)
+   bufferC+=Result(c,k%(pulse_average+1));
 
-       buffer=buffer/(ninterval_1+ninterval_2+1);
-       buffer2=buffer2/(ninterval_1+ninterval_2+1);
+ buffer=buffer/(ninterval_1+ninterval_2+1);
+ buffer2=buffer2/(ninterval_1+ninterval_2+1);
 
-       file2<<setiosflags(ios::left)<<setw(30)<<1/period;
-       file2<<setiosflags(ios::left)<<setw(30)<<buffer;
-//       file2<<setiosflags(ios::left)<<setw(30)<<buffer2;
-       file2<<setiosflags(ios::left)<<setw(30)<<bufferC;
-       file2<<setiosflags(ios::left)<<setw(30)<<k;
-       file2<<setiosflags(ios::left)<<setw(30)<<m<<endl;
+ file2<<setiosflags(ios::left)<<setw(30)<<1/period;
+ file2<<setiosflags(ios::left)<<setw(30)<<buffer;
+ //       file2<<setiosflags(ios::left)<<setw(30)<<buffer2;
+ file2<<setiosflags(ios::left)<<setw(30)<<bufferC;
+ file2<<setiosflags(ios::left)<<setw(30)<<k;
+ file2<<setiosflags(ios::left)<<setw(30)<<m<<endl;
+
 
 }
 
@@ -396,14 +403,14 @@ doub buffer=0,buffer2=0,bufferC=0;
 
 
 
-      delete[] Time;
+ delete[] Time;
 
 
 
 }
 
 
-  return 0;
+ return 0;
 
 
 
