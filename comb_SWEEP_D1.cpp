@@ -255,6 +255,9 @@ for(int m=-steps;m<=steps;m++)
 
     col_matrix< vector<doub> > Result(neq*neq,pulse_average+1);
     col_matrix<vector<doub> > Trans(neq*neq,neq*neq);
+    // IMPORTANT!!!!!!!
+    // Remember to change it back to dense_matrix<doub> when dealing with left plus right circular polarization, since the matrix would be larger than.
+    // IMPORTANT!!!!!!!!
     col_matrix< vector<doub> > Trans_AVE(neq*neq,neq*neq);
 
 
@@ -346,7 +349,7 @@ if(m==-steps){
              diff+=1;
 	  }
     }
-//          cout<<"diff="<<diff<<endl;
+          cout<<"diff="<<diff<<endl;
       if(diff==neq*neq)
 	flag+=1;
       else
