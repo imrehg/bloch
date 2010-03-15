@@ -210,8 +210,8 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int
   col_matrix< vector<doub> > EnerDet(neq,neq);
   Atom atom;
 
-   EnergyDiff[8]=0.2012871;
-   EnergyDiff[24]=9.192631;
+   EnergyDiff[8]=0.2012871*2*pi;
+   EnergyDiff[24]=9.192631*2*pi;
     for (int i=0; i<neq; i++)
       for (int j=i+1; j<neq; j++)
         for (int k=i; k<j; k++){
