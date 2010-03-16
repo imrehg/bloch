@@ -205,7 +205,7 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
-  file1.open("inputMP.txt", ios::out | ios::trunc);
+  file1.open("First_Step.txt", ios::out | ios::trunc);
   file2.precision(15);
   pulse_average=conS;
   col_matrix< vector<doub> > y0I(neq,neq);
@@ -363,8 +363,17 @@ if(m==0){
     }
     if(k==ninterval_m)
       flag=pulse_average+1;
+    if(omp_get_thread_num()==0){
+      doub data_sum=0;
+     for(int c=0;c<16;c++)
+      data_sum+=Result(c,k%(pulse_average+1));
+     file1<<setiosflags(ios::left)<<setw(30)<<k*period<<setiosflags(ios::left)<<setw(30)<<data_sum<<endl;
+   }
+
   }
+
   ninterval_m = k;
+
 }else{
 
   while(flag<pulse_average){
