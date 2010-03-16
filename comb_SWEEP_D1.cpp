@@ -5,7 +5,7 @@ int pulse_average=100;
 const doub pi=3.14159265358979323846264338327950288419716939937511;
 const int npulse=100000;
 int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
-doub period0=10.87827757077666562510422409751326305981252200206427;
+doub period0=10.87827848197104833208;
 doub frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
 const int  neq=32,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 int nexp=12;
@@ -187,7 +187,12 @@ int D1_coef (int L,int F,int mf){
 int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int expN,int n1, int n2,doub detune)
 {
 
-
+  clear(A);
+  clear(R);
+  clear(r);
+  clear(Rc);
+  clear(R_L);
+  clear(EnergyDiff);
   doub phase=0;
   ninterval_1 =n1;
   ninterval_2 =n2;
@@ -212,6 +217,7 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int
 
    EnergyDiff[8]=0.2012871*2*pi;
    EnergyDiff[24]=9.192631*2*pi;
+
     for (int i=0; i<neq; i++)
       for (int j=i+1; j<neq; j++)
         for (int k=i; k<j; k++){
@@ -246,7 +252,7 @@ for(int m=0;m<=steps;m++)
 
    cout<<m<<endl;
    doub De=m*(pow(-1,omp_get_thread_num()))*1.0/total_steps;
-   doub period=10.87827757077666562510422409751326305981252200206427/100*(100+De);
+   doub period=period0/100*(100+De);
    doub peak=peakO*(100+De)/100;
    doub interval_1=FWHM*10,interval_2=period-interval_1;
    doub dt_1=interval_1/ninterval_1,dt_2=interval_2/ninterval_2;
