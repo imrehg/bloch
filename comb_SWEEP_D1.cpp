@@ -54,15 +54,10 @@ int factorial (int num)
 
 doub ReRabi(doub x,doub period,doub peak)//脈衝包絡線函數(實部)，高斯函數*Re[e^{-i*phase}]
 {
-  doub value=0,time=0,factor=0;
-  int i=0;
-  if(x<0.5*period)
-    value=exp(-pow(x/FWHM,2))*cos(-i*phase);
-  else
-  {
-  i=int ((x-0.5*period)/period+1);
-  value=exp(-pow((x-i*period)/FWHM,2))*cos(-i*phase);
-  }
+  doub value=0;
+
+  value=exp(-pow((x-0.5*period)/FWHM,2));
+
   return peak*value;
 }
 
@@ -199,13 +194,15 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
   peakO = PeakPower/150*1.34163815218652164669542605053/2;
   nexp=expN;
-  stringstream strstream;
-  string filename;
+  stringstream strstream,strstream2;
+  string filename,filename2;
   strstream<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
-  file1.open("First_Step.txt", ios::out | ios::trunc);
+  strstream2<<"FS_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
+  strstream2>>filename2;
+  file1.open(filename2.c_str(), ios::out | ios::trunc);
   file2.precision(15);
   pulse_average=conS;
   col_matrix< vector<doub> > y0I(neq,neq);
@@ -251,10 +248,10 @@ for(int m=0;m<=steps;m++)
 {
 
    cout<<m<<endl;
-   doub De=m*(pow(-1,omp_get_thread_num()))*1.0/total_steps;
+   doub De=1.0*m*(pow(-1,omp_get_thread_num()))*1.0/total_steps;
    doub period=period0/100*(100+De);
-   doub peak=peakO*(100+De)/100;
-   doub interval_1=FWHM*10,interval_2=period-interval_1;
+   doub peak=peakO*(100.0+De)/100;
+   doub interval_1=FWHM*5,interval_2=period-interval_1;
    doub dt_1=interval_1/ninterval_1,dt_2=interval_2/ninterval_2;
    interval_2=period-interval_1;
    dt_2=interval_2/ninterval_2;
@@ -299,31 +296,30 @@ for(int m=0;m<=steps;m++)
 
       doub buffer=0;
 
-      if( k%(ninterval_2+ninterval_1)>=ninterval_1/2 && (ninterval_2+ninterval_1/2)>k%(ninterval_2+ninterval_1) )
-	buffer=dt_2;
-      else
+      if( k>=ninterval_2/2 && k<(ninterval_2/2+ninterval_1) )
 	buffer=dt_1;
+      else
+	buffer=dt_2;
 
       if(k==0)
-	Time[k]=0;
+	Time[k]=dt_2;
       else
 	Time[k]=Time[k-1]+buffer;
 
-      buffer= Time[k]-period*int(Time[k]/period);
 
 
       for(int j=3; j<5;j++)
         for(int t=-j;t<j+1;t++)
 	  for(int m=3; m<5;m++)
 	    for(int n=-m;n<m+1;n++){
-	      M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(+0,1,0,j,m,t,n,0.5,0.5,3.5)+atom.coef(-0,1,0,j,m,t,n,0.5,0.5,3.5))/2*ReRabi(buffer,period,peak);
+	      M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(+0,1,0,j,m,t,n,0.5,0.5,3.5)+atom.coef(-0,1,0,j,m,t,n,0.5,0.5,3.5))/2*ReRabi(Time[k],period,peak);
 	      M(D1_coef(0,m,n),k*neq+D1_coef(1,j,t))=M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n));
                }
-
 //initailizing for M matrices
 //The reason to set the matrix this way(the second equation) is that actually calulated transition would be pure imaginary, but we set is to real(multiply a phase).
 //If we directly set M and run through the parameter, we will get a extra munus sign in the symmetric terms, which can't be used in the formalism applied in fun_matrix.
            }
+
 
 solve_Martix(M,Trans,Trans_AVE,Time,EnerDet);
 
