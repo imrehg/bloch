@@ -179,7 +179,7 @@ int D1_coef (int L,int F,int mf){
  }
 
 
-int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int expN,int n1, int n2,doub detune)
+int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int expN,int n1, int n2,doub detune,int Msteps)
 {
 
   clear(A);
@@ -204,7 +204,6 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int
   strstream2>>filename2;
   file1.open(filename2.c_str(), ios::out | ios::trunc);
   file2.precision(15);
-  pulse_average=conS;
   col_matrix< vector<doub> > y0I(neq,neq);
   //initial condition
   col_matrix< vector<doub> > y0R(neq,neq);
@@ -233,7 +232,8 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int
 
   //initialzing the A coefficients
 
-
+ int Matrix_Step = pow(2,(Msteps-1));
+ pulse_average=(conS/Matrix_Step+1);
 
 #pragma omp num_threads(2)
 #pragma omp parallel for
@@ -323,6 +323,20 @@ for(int m=0;m<=steps;m++)
 
 solve_Martix(M,Trans,Trans_AVE,Time,EnerDet);
 
+dense_matrix < doub > Trans_1(neq*neq,neq*neq),Trans_2(neq*neq,neq*neq),Trans_3(neq*neq,neq*neq);
+
+copy(Trans,Trans_1);
+copy(Trans,Trans_2);
+
+for(int j=0;j<(Msteps-1);j++){
+   mult(Trans_1,Trans_2,Trans_3);
+   copy(Trans_3,Trans_1);
+   copy(Trans_3,Trans_2);
+}
+
+copy(Trans_1,Trans);
+
+
 
 cout<<"end of solve"<<endl;
 int k=0,flag=0;
@@ -363,7 +377,7 @@ if(m==0){
       doub data_sum=0;
      for(int c=0;c<16;c++)
       data_sum+=Result(c,k%(pulse_average+1));
-     file1<<setiosflags(ios::left)<<setw(30)<<k*period<<setiosflags(ios::left)<<setw(30)<<data_sum<<endl;
+     file1<<setiosflags(ios::left)<<setw(30)<<k*period*Matrix_Step<<setiosflags(ios::left)<<setw(30)<<data_sum<<endl;
    }
 
   }
@@ -407,7 +421,7 @@ doub buffer=0,buffer2=0,bufferC=0;
  file2<<setiosflags(ios::left)<<setw(30)<<buffer;
  //       file2<<setiosflags(ios::left)<<setw(30)<<buffer2;
  file2<<setiosflags(ios::left)<<setw(30)<<bufferC;
- file2<<setiosflags(ios::left)<<setw(30)<<k;
+ file2<<setiosflags(ios::left)<<setw(30)<<k*Matrix_Step;
  file2<<setiosflags(ios::left)<<setw(30)<<m<<endl;
 
 

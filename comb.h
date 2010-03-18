@@ -19,5 +19,5 @@ using namespace gmm;
 using namespace std;
 
 typedef double doub;
-extern int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int expN,int n1, int n2,doub detune);
+extern int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int expN,int n1, int n2,doub detune,int Msteps);
 #endif // COMB_H_INCLUDED
