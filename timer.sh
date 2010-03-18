@@ -1,5 +1,7 @@
 #!/bin/bash
 
+timecmd="/usr/bin/time -p"
+
 usage() {
   cat <<EOF
 timer.sh
@@ -26,7 +28,7 @@ while [ $a -le "$1" ]
 do
     echo " "
     echo "Repeat $a:"
-    result=`time $2`
+    result=`$timecmd $2`
     a=$((a+1))
 done
 
