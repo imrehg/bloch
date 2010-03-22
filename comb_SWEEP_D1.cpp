@@ -2,7 +2,6 @@
 #include "comb.h"
 doub phase=0;
 int pulse_average=100;
-const doub pi=3.14159265358979323846264338327950288419716939937511;
 const int npulse=100000;
 int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 doub period0=10.87827848197104833208;
@@ -217,11 +216,19 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int
     for (int i=0; i<neq; i++)
       for (int j=i+1; j<neq; j++)
         for (int k=i; k<j; k++){
-           EnerDet(i,j)-=EnergyDiff[k];
-           EnerDet(j,i)+=EnergyDiff[k];
+           EnerDet(i,j)+=EnergyDiff[k];
+           EnerDet(j,i)-=EnergyDiff[k];
         }
   //initialzing the energy level difference for D2 line
 
+    for(int j=3; j<5;j++)
+         for(int k=-j;k<j+1;k++)
+             for(int m=3; m<5;m++)
+                for(int n=-m;n<m+1;n++){
+                     EnerDet(D1_coef(0,j,k),D1_coef(1,m,n))+=detune;
+                     EnerDet(D1_coef(1,m,n),D1_coef(0,j,k))-=detune;
+                }
+  //set detuning of laser field positve represent blue detuning.
 
       for(int j=3; j<5;j++)
          for(int k=-j;k<j+1;k++)
