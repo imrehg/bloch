@@ -6,12 +6,14 @@ const int npulse=100000;
 int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 doub period0=10.87827848197104833208;
 doub frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
-const int  neq=32,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
+const int  neq=32,neq_gr=16,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 int nexp=12;
 vector<doub> r(neq);
 //total decay constant
 vector<doub> R(neq);
 //relaxation rate
+vector<doub> R_gr(neq);
+//relazation rate of ground state
 col_matrix< vector<doub> > Rc(neq,neq);
 col_matrix< vector<doub> > A(neq,neq);
 vector<doub> R_L(neq);
@@ -80,7 +82,7 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
 {
 
   for (int i=0;i<neq;i++){
-     Trans(RealComp(i,i),RealComp(i,i))=-r[i];
+     Trans(RealComp(i,i),RealComp(i,i))=-r[i]-R_gr[i];
      for (int j=0;j<neq;j++){
           if(i<j){
           Trans(RealComp(i,i),ImagComp(i,j))+=2*H(j,i);
@@ -90,11 +92,21 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
           }
           Trans(RealComp(i,i),RealComp(j,j))+=A(i,j);
       }
- } // Bloch eq for population part
+ }
+ // Bloch eq for population part
+
+ for(int i=0;i<neq_gr;i++){
+  for(int j=0;j<neq_gr;j++){
+      if(i!=j)
+        Trans(RealComp(i+neq-neq_gr,i+neq-neq_gr),RealComp(j+neq-neq_gr,j+neq-neq_gr))+=R_gr[j+neq-neq_gr]/(neq_gr-1);
+  }
+ }
+
+ //  Additional setup for Bloch eq of ground state ## This term should be combine to A matrix later##
 
  for (int j=1;j<neq;j++){
     for (int i=0;i<j;i++){
-       Trans(RealComp(i,j),RealComp(i,j))=-(R[i]+R[j]+R_L[i])/2-Rc(i,j);
+       Trans(RealComp(i,j),RealComp(i,j))=-(R[i]+R[j]+R_L[i]+R_gr[i]+R_gr[j])/2;
        Trans(RealComp(i,j),ImagComp(i,j))=D(i,j);
        for (int l=0;l<neq;l++){
            if(l<j){
@@ -115,7 +127,7 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
 
  for (int j=1;j<neq;j++){
    for (int i=0;i<j;i++){
-       Trans(ImagComp(i,j),ImagComp(i,j))=-(R[i]+R[j]+R_L[i])/2-Rc(i,j);
+       Trans(ImagComp(i,j),ImagComp(i,j))=-(R[i]+R[j]+R_L[i]+R_gr[i]+R_gr[j])/2;
        Trans(ImagComp(i,j),RealComp(i,j))=-D(i,j);
       for (int l=0;l<neq;l++){
             Trans(ImagComp(i,j),RealComp(l,j))+=H(i,l);
@@ -178,7 +190,7 @@ int D1_coef (int L,int F,int mf){
  }
 
 
-int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int expN,int n1, int n2,doub detune,int Msteps)
+int sweep(int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune)
 {
 
   clear(A);
@@ -235,7 +247,7 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,int conS,int
              for(int m=3; m<5;m++)
                 for(int n=-m;n<m+1;n++)
                   for(int q=-1;q<2;q++)
-                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,0,1,j,m,k,n,0.5,0.5,3.5),2)*0.0052227*2*pi;
+                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,0,1,j,m,k,n,0.5,0.5,3.5),2)*0.0052227;
 
   //initialzing the A coefficients
 
@@ -286,10 +298,13 @@ for(int m=0;m<=steps;m++)
  //initailizing for density matrices
 
 
- for(int i=0;i<16;i++){
-   r[i]=0.0052227*2*pi;
-   R[i]=0.0052227*2*pi;
+ for(int i=0;i<(neq-neq_gr);i++){
+   r[i]=0.0052227;
+   R[i]=0.0052227;
  }
+
+for(int i=0;i<neq_gr;i++)
+   R_gr[i+neq-neq_gr]=0.000001;
 
  //initailizing for relaxation rate
 
@@ -313,13 +328,11 @@ for(int m=0;m<=steps;m++)
       else
 	Time[k]=Time[k-1]+buffer;
 
-
-
-      for(int j=3; j<5;j++)
-        for(int t=-j;t<j+1;t++)
+  for(int j=3; j<5;j++)
+    for(int t=-j;t<j+1;t++)
 	  for(int m=3; m<5;m++)
 	    for(int n=-m;n<m+1;n++){
-	      M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(+0,1,0,j,m,t,n,0.5,0.5,3.5)+atom.coef(-0,1,0,j,m,t,n,0.5,0.5,3.5))/2*ReRabi(Time[k],period,peak);
+	      M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(1,1,0,j,m,t,n,0.5,0.5,3.5)+atom.coef(1,1,0,j,m,t,n,0.5,0.5,3.5))/2*ReRabi(Time[k],period,peak);
 	      M(D1_coef(0,m,n),k*neq+D1_coef(1,j,t))=M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n));
                }
 //initailizing for M matrices
@@ -366,7 +379,7 @@ if(m==0){
 
   for(int c=0;c<neq;c++){
 	  for(int d=0;d<neq;d++){
-	      if(Result(RealComp(c,d),(k%(pulse_average+1)))==0)
+	      if(Result(RealComp(c,d),(k%(pulse_average+1)))<=convergence_threshold)
 	         diff+=1;
 	       else if(abs(1.0-Result(RealComp(c,d),(k%(pulse_average+1)))/(Result(RealComp(c,d),(k-pulse_average)%(pulse_average+1))))<convergence)
              diff+=1;
