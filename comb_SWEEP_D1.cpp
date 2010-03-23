@@ -361,8 +361,9 @@ copy(Trans_1,Trans);
 cout<<"end of solve"<<endl;
 int k=0,flag=0;
 doub diff=0;
+//
+//if(m==0){
 
-if(m==0){
   while(flag<pulse_average){
 
     for(int a=0;a<neq;a++)
@@ -391,8 +392,10 @@ if(m==0){
       else
 	flag=0;
     }
+
     if(k==ninterval_m)
       flag=pulse_average+1;
+
     if(omp_get_thread_num()==0){
       doub data_sum=0;
      for(int c=0;c<16;c++)
@@ -401,26 +404,26 @@ if(m==0){
    }
 
   }
+//
+//  ninterval_m = k;
 
-  ninterval_m = k;
-
-}else{
-
-  while(flag<pulse_average){
-
-    for(int a=0;a<neq;a++)
-      for(int b=0;b<neq;b++){
-	Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
-	Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
-
-    mult(Trans,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
-    k+=1;
-
-    if(k==ninterval_m)
-      flag=pulse_average+1;
-  }
-
-}
+//}else{
+//
+//  while(flag<pulse_average){
+//
+//    for(int a=0;a<neq;a++)
+//      for(int b=0;b<neq;b++){
+//	Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
+//	Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
+//
+//    mult(Trans,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
+//    k+=1;
+//
+//    if(k==ninterval_m)
+//      flag=pulse_average+1;
+//  }
+//
+//}
 
 cout<<"npulse="<<k<<endl;
 
