@@ -247,7 +247,7 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,doub converg
              for(int m=3; m<5;m++)
                 for(int n=-m;n<m+1;n++)
                   for(int q=-1;q<2;q++)
-                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,0,1,j,m,k,n,0.5,0.5,3.5),2)*0.0052227;
+                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,0,1,j,m,k,n,0.5,0.5,3.5),2)*0.0052227*2*pi;
 
   //initialzing the A coefficients
 
@@ -299,8 +299,8 @@ for(int m=0;m<=steps;m++)
 
 
  for(int i=0;i<(neq-neq_gr);i++){
-   r[i]=0.0052227;
-   R[i]=0.0052227;
+   r[i]=0.0052227*2*pi;
+   R[i]=0.0052227*2*pi;
  }
 
 for(int i=0;i<neq_gr;i++)
