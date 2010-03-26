@@ -148,7 +148,6 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
 
 
       clear(Trans_B);
-      clear(Trans_D);
       clear(Trans_E);
       clear(Trans_I);
       clear(Trans_C);
@@ -164,21 +163,38 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
 //    copy(Trans_E,Trans_E_R);
 
       for(int j=1;j<=nexp;j++){
+          if((j%2)==1){
           mult(Trans_E,Trans_I,Trans_C);
-          copy(Trans_C,Trans_I);
-          add(scaled(Trans_I,pow((T[t]-T[t-1]),j)/factorial(j)),Trans_B);
+//          copy(Trans_C,Trans_I);
+          add(scaled(Trans_C,pow((T[t]-T[t-1]),j)/factorial(j)),Trans_B);
+          }else{
+            mult(Trans_E,Trans_C,Trans_I);
+            add(scaled(Trans_I,pow((T[t]-T[t-1]),j)/factorial(j)),Trans_B);
+          }
 //          cout<<"nnzE="<<nnz(Trans_E)<<endl;
 //          cout<<"nnzI="<<nnz(Trans_I)<<endl;
 //          cout<<"nnzC="<<nnz(Trans_C)<<endl;
       }
+
 //        time_t start=clock();
+
         add(Trans_B,Trans_Ave);
+
+     if(t%2==1){
         mult(Trans_B,Trans,Trans_D);
-        copy(Trans_D,Trans);
+     }else{
+        mult(Trans_B,Trans_D,Trans);
+     }
+//        copy(Trans_D,Trans);
+
 //        cout<<"nnz="<<nnz(Trans_E)<<endl;
 //        cout<<(clock()-start)*1.0/CLOCKS_PER_SEC<<endl;
 
   }
+
+  if((ninterval_1+ninterval_2)%2==1)
+     copy(Trans_D,Trans);
+
 }
 
 
@@ -364,7 +380,7 @@ doub diff=0;
 //
 //if(m==0){
 
-  while(flag<pulse_average){
+while(flag<pulse_average){
 
     for(int a=0;a<neq;a++)
       for(int b=0;b<neq;b++){

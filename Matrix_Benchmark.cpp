@@ -14,7 +14,7 @@
 #include "atom.cpp" //for atom struct
 using namespace gmm;
 using namespace std;
-typedef double doub;
+typedef long double doub;
 #include <ctime>
 #include <time.h>
 
@@ -74,7 +74,7 @@ for (int i=1;i<11;i++){
 
     for(int i=0;i<time;i++){
         mult(A,B,C);
-        copy(scaled(C,0.5),A);
+        copy(scaled(C,1),A);
     }
 
     T2=clock();
@@ -85,7 +85,7 @@ for (int i=1;i<11;i++){
 
     for(int i=0;i<time;i++){
         mult(A2,B2,C2);
-        copy(scaled(C2,0.5),A2);
+        copy(scaled(C2,1),A2);
     }
     T2=clock();
 
@@ -95,10 +95,11 @@ for (int i=1;i<11;i++){
 
     for(int i=0;i<time;i++){
         mult(A3,B3,C3);
-        copy(scaled(C3,0.5),A3);
+        copy(scaled(C3,1),A3);
     }
     T2=clock();
-
+    add(A2,scaled(A3,-1.0),A3);
+    cout<<A3<<endl;
     file1<<setiosflags(ios::left)<<setw(30)<<(T2-T1)*1.0/CLOCKS_PER_SEC/time;
 
     T1=clock();

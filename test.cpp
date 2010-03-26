@@ -57,13 +57,13 @@ int main(){
 //               for(int n=-m;n<m+1;n++)
 //                     M(D1_coef(i,j,k),D1_coef(l,m,n))+=atom.coef(+1,i,l,j,m,k,n,0.5,0.5,3.5)+atom.coef(-1,i,l,j,m,k,n,0.5,0.5,3.5);
 //
- long double sum=0;
-      for(int j=3; j<=5;j++)
-         for(int k=-j;k<j+1;k++){
-                    std::cout<<j<<"  "<<k<<" ";
-                    std::cout<<atom.coef(0,0,1,4,j,k,k,0.5,1.5,3.5)<<std::endl;}
-             for(int m=3; m<5;m++)
-                for(int n=-m;n<m+1;n++)
+// long double sum=0;
+//      for(int j=3; j<=5;j++)
+//         for(int k=-j;k<j+1;k++){
+//                    std::cout<<j<<"  "<<k<<" ";
+//                    std::cout<<atom.coef(0,0,1,4,j,k,k,0.5,1.5,3.5)<<std::endl;}
+//             for(int m=3; m<5;m++)
+//                for(int n=-m;n<m+1;n++)
 //                  for(int q=-1;q<2;q++){
 //                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,0,1,j,m,k,n,1.5,0.5,3.5),2);
 //                     sum+=pow(atom.coef(q,0,1,j,m,k,n,1.5,0.5,3.5),2);
@@ -84,7 +84,7 @@ int main(){
 
 //  std::cout << std::setprecision(10);
 // std::cout<<RealComp(15,15);
-
+ cout<<4%2;
  return 0;
 
 
