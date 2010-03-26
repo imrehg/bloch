@@ -140,11 +140,11 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
 
 void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans, col_matrix< vector<doub> >&Trans_Ave,doub *T, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
 {
-  col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_2B(neq*neq,neq*neq);
+  col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_2B(neq*neq,neq*neq),Trans_Ave_B(neq*neq,neq*neq);
   col_matrix< vector<doub> > Msub(neq,neq);
   col_matrix<vector<doub> > Trans_D(neq*neq,neq*neq),Trans_B(neq*neq,neq*neq);
 
-  for(int t=1;t<(ninterval_1+ninterval_2)+1;t++){
+  for(int t=1;t<(ninterval_2/2+ninterval_1)+2;t++){
 
 
       clear(Trans_B);
@@ -175,7 +175,8 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
          }
         copy(Trans_B,Trans_2B);
       }else{
-        copy(Trans_2B,Trans_B);
+         if(t==(ninterval_2/2+ninterval_1)+1)
+            copy(Trans_2B,Trans_B);
       }
     }else{
       for(int j=1;j<=nexp;j++){
@@ -191,21 +192,32 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
 
 //cout<<(clock()-start)*1.0/CLOCKS_PER_SEC<<endl;
 
-        add(Trans_B,Trans_Ave);
 
      if(t%2==1){
         mult(Trans_B,Trans,Trans_D);
+        if(t!=(ninterval_2/2+ninterval_1)+1)
+         add(Trans_D,Trans_Ave);
      }else{
         mult(Trans_B,Trans_D,Trans);
+        if(t!=(ninterval_2/2+ninterval_1)+1)
+         add(Trans,Trans_Ave);
      }
-//        copy(Trans_D,Trans);
 
+
+
+     if(t==ninterval_2/2){
+           copy(Trans,Trans_2B);
+           copy(Trans_Ave,Trans_Ave_B);
+     }
+
+//        copy(Trans_D,Trans);
 //        cout<<"nnz="<<nnz(Trans_E)<<endl;
 
   }
 
-  if((ninterval_1+ninterval_2)%2==1)
-     copy(Trans_D,Trans);
+  mult(Trans_Ave_B,Trans,Trans_2B);
+  add(Trans_2B,Trans_Ave);
+  copy(Trans_D,Trans);
 
 }
 
