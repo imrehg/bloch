@@ -144,19 +144,19 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
   col_matrix< vector<doub> > Msub(neq,neq);
   col_matrix<vector<doub> > Trans_D(neq*neq,neq*neq),Trans_B(neq*neq,neq*neq);
 
-  for(int t=1;t<(ninterval_2/2+ninterval_1)+2;t++){
+    for(int i=0;i<neq*neq;i++)
+             Trans_B(i,i)=1;
 
 
-      clear(Trans_B);
+  for(int t=1;t<(ninterval_2/2+ninterval_1+2);t++){
+
       clear(Trans_E);
       clear(Trans_I);
       clear(Trans_C);
       cout<<t<<endl;
 
-       for(int i=0;i<neq*neq;i++){
+       for(int i=0;i<neq*neq;i++)
              Trans_I(i,i)=1;
-             Trans_B(i,i)=1;
-       }
 
       copy(sub_matrix(M,sub_interval(0,neq),sub_interval((t-1)*neq,neq)),Msub);
       fun_Matrix(Trans_E,Msub,D);
@@ -175,10 +175,13 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
          }
         copy(Trans_B,Trans_2B);
       }else{
-         if(t==(ninterval_2/2+ninterval_1)+1)
+         if(t==(ninterval_2/2+ninterval_1+1))
             copy(Trans_2B,Trans_B);
       }
     }else{
+      clear(Trans_B);
+     for(int i=0;i<neq*neq;i++)
+             Trans_B(i,i)=1;
       for(int j=1;j<=nexp;j++){
           if((j%2)==1){
           mult(Trans_E,Trans_I,Trans_C);
@@ -195,11 +198,11 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
 
      if(t%2==1){
         mult(Trans_B,Trans,Trans_D);
-        if(t!=(ninterval_2/2+ninterval_1)+1)
+        if(t!=(ninterval_2/2+ninterval_1+1))
          add(Trans_D,Trans_Ave);
      }else{
         mult(Trans_B,Trans_D,Trans);
-        if(t!=(ninterval_2/2+ninterval_1)+1)
+        if(t!=(ninterval_2/2+ninterval_1+1))
          add(Trans,Trans_Ave);
      }
 
