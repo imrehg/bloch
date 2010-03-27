@@ -138,47 +138,90 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
 
 }
 
-void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans, col_matrix< vector<doub> >&Trans_Ave,doub *T, col_matrix< vector<doub> >&D)// solve(presultI,presultR,M,k)
+void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans, col_matrix< vector<doub> >&Trans_Ave,doub *T, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
 {
-  col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq);
+  col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_2B(neq*neq,neq*neq),Trans_Ave_B(neq*neq,neq*neq);
   col_matrix< vector<doub> > Msub(neq,neq);
   col_matrix<vector<doub> > Trans_D(neq*neq,neq*neq),Trans_B(neq*neq,neq*neq);
 
-  for(int t=1;t<(ninterval_1+ninterval_2)+1;t++){
+    for(int i=0;i<neq*neq;i++)
+             Trans_B(i,i)=1;
 
 
-      clear(Trans_B);
-      clear(Trans_D);
+  for(int t=1;t<(ninterval_2/2+ninterval_1+2);t++){
+
       clear(Trans_E);
       clear(Trans_I);
       clear(Trans_C);
       cout<<t<<endl;
 
-       for(int i=0;i<neq*neq;i++){
+       for(int i=0;i<neq*neq;i++)
              Trans_I(i,i)=1;
-             Trans_B(i,i)=1;
-       }
 
       copy(sub_matrix(M,sub_interval(0,neq),sub_interval((t-1)*neq,neq)),Msub);
       fun_Matrix(Trans_E,Msub,D);
-//    copy(Trans_E,Trans_E_R);
+//time_t start=clock();
 
+    if(t<=ninterval_2/2||t>(ninterval_2/2+ninterval_1)){
+     if(t==1){
       for(int j=1;j<=nexp;j++){
+          if((j%2)==1){
           mult(Trans_E,Trans_I,Trans_C);
-          copy(Trans_C,Trans_I);
-          add(scaled(Trans_I,pow((T[t]-T[t-1]),j)/factorial(j)),Trans_B);
-//          cout<<"nnzE="<<nnz(Trans_E)<<endl;
-//          cout<<"nnzI="<<nnz(Trans_I)<<endl;
-//          cout<<"nnzC="<<nnz(Trans_C)<<endl;
+          add(scaled(Trans_C,pow((dt2),j)/factorial(j)),Trans_B);
+          }else{
+            mult(Trans_E,Trans_C,Trans_I);
+            add(scaled(Trans_I,pow((dt2),j)/factorial(j)),Trans_B);
+          }
+         }
+        copy(Trans_B,Trans_2B);
+      }else{
+         if(t==(ninterval_2/2+ninterval_1+1))
+            copy(Trans_2B,Trans_B);
       }
-//        time_t start=clock();
-        add(Trans_B,Trans_Ave);
+    }else{
+      clear(Trans_B);
+     for(int i=0;i<neq*neq;i++)
+             Trans_B(i,i)=1;
+      for(int j=1;j<=nexp;j++){
+          if((j%2)==1){
+          mult(Trans_E,Trans_I,Trans_C);
+          add(scaled(Trans_C,pow((dt1),j)/factorial(j)),Trans_B);
+          }else{
+            mult(Trans_E,Trans_C,Trans_I);
+            add(scaled(Trans_I,pow((dt1),j)/factorial(j)),Trans_B);
+          }
+         }
+    }
+
+//cout<<(clock()-start)*1.0/CLOCKS_PER_SEC<<endl;
+
+
+     if(t%2==1){
         mult(Trans_B,Trans,Trans_D);
-        copy(Trans_D,Trans);
+        if(t!=(ninterval_2/2+ninterval_1+1))
+         add(Trans_D,Trans_Ave);
+     }else{
+        mult(Trans_B,Trans_D,Trans);
+        if(t!=(ninterval_2/2+ninterval_1+1))
+         add(Trans,Trans_Ave);
+     }
+
+
+
+     if(t==ninterval_2/2){
+           copy(Trans,Trans_2B);
+           copy(Trans_Ave,Trans_Ave_B);
+     }
+
+//        copy(Trans_D,Trans);
 //        cout<<"nnz="<<nnz(Trans_E)<<endl;
-//        cout<<(clock()-start)*1.0/CLOCKS_PER_SEC<<endl;
 
   }
+
+  mult(Trans_Ave_B,Trans,Trans_2B);
+  add(Trans_2B,Trans_Ave);
+  copy(Trans_D,Trans);
+
 }
 
 
@@ -200,8 +243,8 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,doub converg
   clear(R_L);
   clear(EnergyDiff);
   doub phase=0;
-  ninterval_1 =n1;
-  ninterval_2 =n2;
+  ninterval_1 =n1+(n1%2);
+  ninterval_2 =n2+(n2%2);
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
   peakO = PeakPower/150*1.34163815218652164669542605053/2;
   nexp=expN;
@@ -328,6 +371,7 @@ for(int i=0;i<neq_gr;i++)
       else
 	Time[k]=Time[k-1]+buffer;
 
+if( k>=ninterval_2/2 && k<(ninterval_2/2+ninterval_1) ){
   for(int j=3; j<5;j++)
     for(int t=-j;t<j+1;t++)
 	  for(int m=3; m<5;m++)
@@ -335,13 +379,14 @@ for(int i=0;i<neq_gr;i++)
 	      M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(1,1,0,j,m,t,n,0.5,0.5,3.5)+atom.coef(1,1,0,j,m,t,n,0.5,0.5,3.5))/2*ReRabi(Time[k],period,peak);
 	      M(D1_coef(0,m,n),k*neq+D1_coef(1,j,t))=M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n));
                }
+}
 //initailizing for M matrices
 //The reason to set the matrix this way(the second equation) is that actually calulated transition would be pure imaginary, but we set is to real(multiply a phase).
 //If we directly set M and run through the parameter, we will get a extra munus sign in the symmetric terms, which can't be used in the formalism applied in fun_matrix.
            }
 
 
-solve_Martix(M,Trans,Trans_AVE,Time,EnerDet);
+solve_Martix(M,Trans,Trans_AVE,Time,EnerDet,dt_1,dt_2);
 
 dense_matrix < doub > Trans_1(neq*neq,neq*neq),Trans_2(neq*neq,neq*neq),Trans_3(neq*neq,neq*neq);
 
@@ -364,7 +409,7 @@ doub diff=0;
 //
 //if(m==0){
 
-  while(flag<pulse_average){
+while(flag<pulse_average){
 
     for(int a=0;a<neq;a++)
       for(int b=0;b<neq;b++){
