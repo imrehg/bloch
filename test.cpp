@@ -84,7 +84,10 @@ int main(){
 
 //  std::cout << std::setprecision(10);
 // std::cout<<RealComp(15,15);
- cout<<4%2;
+
+for(int i=0; i<2;++i)
+ cout<<i++;
+
  return 0;
 
 
