@@ -290,7 +290,7 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,doub converg
              for(int m=3; m<5;m++)
                 for(int n=-m;n<m+1;n++)
                   for(int q=-1;q<2;q++)
-                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,0,1,j,m,k,n,0.5,0.5,3.5),2)*0.0052227*2*pi;
+                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,1,0,m,j,n,k,1.5,0.5,3.5),2)*0.0052227*2*pi;
 
   //initialzing the A coefficients
 
@@ -376,9 +376,8 @@ if( k>=ninterval_2/2 && k<(ninterval_2/2+ninterval_1) ){
     for(int t=-j;t<j+1;t++)
 	  for(int m=3; m<5;m++)
 	    for(int n=-m;n<m+1;n++){
-	      M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(1,1,0,j,m,t,n,0.5,0.5,3.5)+atom.coef(1,1,0,j,m,t,n,0.5,0.5,3.5))/2*ReRabi(Time[k],period,peak);
-	      M(D1_coef(0,m,n),k*neq+D1_coef(1,j,t))=M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n));
-               }
+	      M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(1,1,0,j,m,t,n,1.5,0.5,3.5)+atom.coef(1,1,0,j,m,t,n,1.5,0.5,3.5))/2*ReRabi(Time[k],period,peak);
+	      M(D1_coef(0,m,n),k*neq+D1_coef(1,j,t))=M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n));}
 }
 //initailizing for M matrices
 //The reason to set the matrix this way(the second equation) is that actually calulated transition would be pure imaginary, but we set is to real(multiply a phase).
@@ -561,7 +560,7 @@ doub sweep_single(doub period_set,doub PeakPower,doub convergence,doub convergen
              for(int m=3; m<5;m++)
                 for(int n=-m;n<m+1;n++)
                   for(int q=-1;q<2;q++)
-                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,0,1,j,m,k,n,0.5,0.5,3.5),2)*0.0052227*2*pi;
+                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,1,0,m,j,n,k,1.5,0.5,3.5),2)*0.0052227*2*pi;
 
   //initialzing the A coefficients
 
@@ -639,7 +638,7 @@ if( k>=ninterval_2/2 && k<(ninterval_2/2+ninterval_1) ){
     for(int t=-j;t<j+1;t++)
 	  for(int m=3; m<5;m++)
 	    for(int n=-m;n<m+1;n++){
-	      M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(1,1,0,j,m,t,n,0.5,0.5,3.5)+atom.coef(1,1,0,j,m,t,n,0.5,0.5,3.5))/2*ReRabi(Time[k],period,peak);
+	      M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n))=(atom.coef(1,1,0,j,m,t,n,1.5,0.5,3.5)+atom.coef(1,1,0,j,m,t,n,1.5,0.5,3.5))/2*ReRabi(Time[k],period,peak);
 	      M(D1_coef(0,m,n),k*neq+D1_coef(1,j,t))=M(D1_coef(1,j,t),k*neq+D1_coef(0,m,n));
                }
 }
