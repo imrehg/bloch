@@ -5,7 +5,7 @@ int pulse_average=100;
 const int npulse=100000;
 int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 doub period0=10.87827848197104833208;
-doub frequency=0,peakO=1.34163815218652164669542605053/2,FWHM=0.0007; //about 150uW/cm2 about 1ps
+doub frequency=0,peakO=0.84852647133780433846/2,FWHM=0.00175; //about 150uW/cm2 about 5ps  peak0=1.34163815218652164669542605053 for 2ps
 const int  neq=32,neq_gr=16,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 int nexp=12;
 vector<doub> r(neq);
@@ -19,6 +19,7 @@ col_matrix< vector<doub> > A(neq,neq);
 vector<doub> R_L(neq);
 doub lasDe = 0;
 vector<doub> EnergyDiff(neq-1);
+doub LineWidth=0.7*2*pi;//0.0052227*2*pi
 
 
 int RealComp(int i,int j)
@@ -246,7 +247,7 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,doub converg
   ninterval_1 =n1+(n1%2);
   ninterval_2 =n2+(n2%2);
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
-  peakO = PeakPower/150*1.34163815218652164669542605053/2;
+  peakO = PeakPower/150*0.84852647133780433846/2;
   nexp=expN;
   stringstream strstream,strstream2;
   string filename,filename2;
@@ -290,7 +291,7 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,doub converg
              for(int m=3; m<5;m++)
                 for(int n=-m;n<m+1;n++)
                   for(int q=-1;q<2;q++)
-                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,1,0,m,j,n,k,1.5,0.5,3.5),2)*0.0052227*2*pi;
+                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,1,0,m,j,n,k,1.5,0.5,3.5),2)*LineWidth;
 
   //initialzing the A coefficients
 
@@ -312,7 +313,7 @@ for(int m=0;m<=steps;m++)
    cout<<m<<endl;
    doub De=1.0*m*(pow(-1,omp_get_thread_num()))*1.0/total_steps;
    doub period=period0/100*(100+De);
-   doub peak=peakO*(100.0+De)/100;
+   doub peak=peakO*sqrt((100.0+De)/100);
    doub interval_1=FWHM*5,interval_2=period-interval_1;
    doub dt_1=interval_1/ninterval_1,dt_2=interval_2/ninterval_2;
    interval_2=period-interval_1;
@@ -342,8 +343,8 @@ for(int m=0;m<=steps;m++)
 
 
  for(int i=0;i<(neq-neq_gr);i++){
-   r[i]=0.0052227*2*pi;
-   R[i]=0.0052227*2*pi;
+   r[i]=LineWidth;
+   R[i]=LineWidth;
  }
 
 for(int i=0;i<neq_gr;i++)
@@ -490,25 +491,14 @@ doub buffer=0,buffer2=0,bufferC=0;
  file2<<setiosflags(ios::left)<<setw(30)<<bufferC;
  file2<<setiosflags(ios::left)<<setw(30)<<k*Matrix_Step;
  file2<<setiosflags(ios::left)<<setw(30)<<m<<endl;
-
-
 }
 
 ///////////////////////////////End of Sweeping//////////////////////////////////
 
-
-
  delete[] Time;
 
-
-
 }
-
-
  return 0;
-
-
-
 
 }
 
@@ -526,7 +516,7 @@ doub sweep_single(doub period_set,doub PeakPower,doub convergence,doub convergen
   doub phase=0;
   ninterval_1 =n1+(n1%2);
   ninterval_2 =n2+(n2%2);
-  peakO = PeakPower/150*1.34163815218652164669542605053/2;
+  peakO = PeakPower/150*0.84852647133780433846/2;
   nexp=expN;
   col_matrix< vector<doub> > y0I(neq,neq);
   //initial condition
@@ -560,7 +550,7 @@ doub sweep_single(doub period_set,doub PeakPower,doub convergence,doub convergen
              for(int m=3; m<5;m++)
                 for(int n=-m;n<m+1;n++)
                   for(int q=-1;q<2;q++)
-                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,1,0,m,j,n,k,1.5,0.5,3.5),2)*0.0052227*2*pi;
+                     A(D1_coef(0,j,k),D1_coef(1,m,n))+=pow(atom.coef(q,1,0,m,j,n,k,1.5,0.5,3.5),2)*LineWidth;
 
   //initialzing the A coefficients
 
@@ -604,8 +594,8 @@ doub sweep_single(doub period_set,doub PeakPower,doub convergence,doub convergen
 
 
  for(int i=0;i<(neq-neq_gr);i++){
-   r[i]=0.0052227*2*pi;
-   R[i]=0.0052227*2*pi;
+   r[i]=LineWidth;
+   R[i]=LineWidth;
  }
 
 for(int i=0;i<neq_gr;i++)
