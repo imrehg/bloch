@@ -2,13 +2,18 @@ CC=g++
 CXXFLAGS=-O3 -llapack -lblas -fopenmp 
 LATLAS=/usr/lib/atlas/liblapack.a /usr/lib/atlas/libblas.a -latlas
 LDFLAGS=-o
-MAIN=comb_SWEEP_D1_main.cpp
-D1=comb_SWEEP_D1.cpp
+MAIN=comb_SWEEP_D2_main.cpp
+D1=comb_SWEEP_D2.cpp
+MAIN_CW=CW_SWEEP_D2_main.cpp
+CW=CW_SWEEP_D2.cpp
 O=$(MAIN:.cpp=.o)
 O2=$(D1:.cpp=.o)
+O3=$(MAIN_CW:.cpp=.o)
+O4=$(CW:.cpp=.o)
 EXECUTABLE=comb
+EXECUTABLE_CW=CW
 
-all: $(O) $(O2) final
+comb: $(O) $(O2) final
 	
 $(O): atom.cpp comb.h $(MAIN)
 	$(CC) -c $(MAIN) $(CXXFLAGS)
@@ -17,6 +22,18 @@ $(O2): atom.cpp comb.h $(D1)
 	$(CC) -c $(D1) $(CXXFLAGS)
 final:
 	$(CC) $(LDFLAGS) $(EXECUTABLE) $(O) $(O2) $(CXXFLAGS)
+
+CW:  $(O3) $(O4) final_CW
+
+$(O3): atom.cpp CW.h $(MAIN_CW)
+	$(CC) -c $(MAIN_CW) $(CXXFLAGS)
+
+$(O4): atom.cpp CW.h $(CW)
+	$(CC) -c $(CW) $(CXXFLAGS)
+
+final_CW:
+	$(CC) $(LDFLAGS) $(EXECUTABLE_CW) $(O3) $(O4) $(CXXFLAGS)
+
 
 clean:
 	rm *.o
