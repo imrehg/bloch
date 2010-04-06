@@ -207,8 +207,6 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
          add(Trans,Trans_Ave);
      }
 
-
-
      if(t==ninterval_2/2){
            copy(Trans,Trans_2B);
            copy(Trans_Ave,Trans_Ave_B);
@@ -244,8 +242,8 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,doub converg
   clear(R_L);
   clear(EnergyDiff);
   doub phase=0;
-  ninterval_1 =n1+(n1%2);
-  ninterval_2 =n2+(n2%2);
+  ninterval_1 =n1-(n1%4);
+  ninterval_2 =n2-(n2%4);
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
   peakO = PeakPower/150*0.84852647133780433846/2;
   nexp=expN;
@@ -514,8 +512,8 @@ doub sweep_single(doub period_set,doub PeakPower,doub convergence,doub convergen
   clear(R_L);
   clear(EnergyDiff);
   doub phase=0;
-  ninterval_1 =n1+(n1%2);
-  ninterval_2 =n2+(n2%2);
+  ninterval_1 =n1-(n1%4);
+  ninterval_2 =n2-(n2%4);
   peakO = PeakPower/150*0.84852647133780433846/2;
   nexp=expN;
   col_matrix< vector<doub> > y0I(neq,neq);
