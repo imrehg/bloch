@@ -19,7 +19,7 @@ col_matrix< vector<doub> > A(neq,neq);
 vector<doub> R_L(neq);
 doub lasDe = 0;
 vector<doub> EnergyDiff(neq-1);
-doub LineWidth=0.7*2*pi;//0.0052227*2*pi
+doub LineWidth=0.0052227*2*pi;//0.7*2*pi;//
 
 
 int RealComp(int i,int j)
@@ -245,7 +245,7 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,doub converg
   ninterval_1 =n1-(n1%4);
   ninterval_2 =n2-(n2%4);
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
-  peakO = PeakPower/150*0.84852647133780433846/2;
+  peakO = sqrt(PeakPower/150)*0.84852647133780433846/2;
   nexp=expN;
   stringstream strstream,strstream2;
   string filename,filename2;
@@ -346,7 +346,7 @@ for(int m=0;m<=steps;m++)
  }
 
 for(int i=0;i<neq_gr;i++)
-   R_gr[i+neq-neq_gr]=0.000001;
+   R_gr[i+neq-neq_gr]=0.000001*2*pi;
 
  //initailizing for relaxation rate
 
@@ -441,8 +441,15 @@ while(flag<pulse_average){
 
     if(omp_get_thread_num()==0){
       doub data_sum=0;
-     for(int c=0;c<16;c++)
-      data_sum+=Result(c,k%(pulse_average+1));
+//     for(int c=0;c<16;c++)
+//      data_sum+=Result(c,k%(pulse_average+1));
+
+ for(int l=-3;l<4;l++)
+  for(int n=-4;n<5;n++){
+    data_sum+=(pow(Result(RealComp(D1_coef(0,3,l),D1_coef(0,4,n)),k%(pulse_average+1)),2)+pow(Result(ImagComp(D1_coef(0,3,l),D1_coef(0,4,n)),k%(pulse_average+1)),2));
+    }
+    data_sum=data_sum/63;
+
      file1<<setiosflags(ios::left)<<setw(30)<<k*period*Matrix_Step<<setiosflags(ios::left)<<setw(30)<<data_sum<<endl;
    }
 
@@ -597,7 +604,7 @@ doub sweep_single(doub period_set,doub PeakPower,doub convergence,doub convergen
  }
 
 for(int i=0;i<neq_gr;i++)
-   R_gr[i+neq-neq_gr]=0.000001;
+   R_gr[i+neq-neq_gr]=0.000001*2*pi;
 
  //initailizing for relaxation rate
 
