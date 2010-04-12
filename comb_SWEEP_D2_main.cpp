@@ -5,9 +5,8 @@ int main()
 {
 
 //    for(int i=0;i<11;i+=1)
-     sweep(1,1000000,200,1/pow(10,4),0,10,12,10,600,10,0);
+     sweep(100,10000,200,1/pow(10,5),0,10,12,10,600,10,0);
       //sweep steps, total steps, power(uW/cm2),convergence condition,convergence threshold,convergency steps,ADM order,n1 interval,n2 interval,Matrix self multiplication,laser detune
-
 
 //fstream file;
 //stringstream strstream;
@@ -30,6 +29,7 @@ int main()
 //file.close();
 //
 //}
+
 return 0;
 
 }

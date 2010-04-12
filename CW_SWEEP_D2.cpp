@@ -19,7 +19,7 @@ col_matrix< vector<doub> > Rc(neq,neq);
 col_matrix< vector<doub> > A(neq,neq);
 vector<doub> R_L(neq);
 doub lasDe = 0;
-doub LineWidth=0.0052227*2*pi;//0.7*2*pi;//0.0052227*2*pi
+doub LineWidth=0.7*2*pi;//0.0052227*2*pi
 
 
 
@@ -235,25 +235,28 @@ for(int m=0;m<=sweep_steps;m++)
     for (int i=0; i<neq; i++)
       for (int j=i+1; j<neq; j++)
         for (int k=i; k<j; k++){
+          if(k==8){
            EnerDet(i,j)+=EnergyDiff[k];
            EnerDet(j,i)-=EnergyDiff[k];
+          }
         }
   //initialzing the energy level difference for D2 line
 
-      for(int j=3; j<5;j++)
-         for(int k=-j;k<j+1;k++)
-             for(int m=3; m<5;m++)
-                for(int n=-m;n<m+1;n++){
-                    if(m==3){
-                    EnerDet(D1_coef(0,j,k),D1_coef(1,m,n))=0;
-                    EnerDet(D1_coef(1,m,n),D1_coef(0,j,k))=0;
-                    }else if(j==3){
-                       EnerDet(D1_coef(0,j,k),D1_coef(1,m,n))+=EnergyDiff[24];
-                       EnerDet(D1_coef(1,m,n),D1_coef(0,j,k))=-EnerDet(D1_coef(0,j,k),D1_coef(1,m,n));
-                    }
-                }
+//      for(int j=3; j<5;j++)
+//         for(int k=-j;k<j+1;k++)
+//             for(int m=3; m<5;m++)
+//                for(int n=-m;n<m+1;n++){
+//                    if(m==3){
+//                    EnerDet(D1_coef(0,j,k),D1_coef(1,m,n))=0;
+//                    EnerDet(D1_coef(1,m,n),D1_coef(0,j,k))=0;
+//                    }else if(j==3){
+//                       EnerDet(D1_coef(0,j,k),D1_coef(1,m,n))+=EnergyDiff[24];
+//                       EnerDet(D1_coef(1,m,n),D1_coef(0,j,k))=-EnerDet(D1_coef(0,j,k),D1_coef(1,m,n));
+//                    }
+//                }
+//
+//clear(EnerDet);
 
-clear(EnerDet);
     for(int j=3; j<5;j++)
          for(int k=-j;k<j+1;k++)
              for(int m=3; m<5;m++)
@@ -274,12 +277,9 @@ clear(EnerDet);
                 if(j==4&&m==3){
                      EnerDet(D1_coef(0,j,k),D1_coef(0,m,n))+=detune_1;
                      EnerDet(D1_coef(0,m,n),D1_coef(0,j,k))-=detune_1;
-                }
-                if(j==3&&m==4){
-                     EnerDet(D1_coef(1,j,k),D1_coef(1,m,n))+=detune_1;
-                     EnerDet(D1_coef(1,m,n),D1_coef(1,j,k))-=detune_1;
-                }
-
+                     EnerDet(D1_coef(0,j,k),D1_coef(0,m,n))-=detune_2;
+                     EnerDet(D1_coef(0,m,n),D1_coef(0,j,k))+=detune_2;
+                  }
                 }
 
   //set detuning of laser field positve represent blue detuning.
@@ -349,7 +349,6 @@ for(long j=0;j<(Msteps-1);j++){
 
 copy(Trans_1,Trans);
 
-cout<<"aa"<<endl;
 int k=0,flag=0;
 doub diff=0;
 
@@ -397,7 +396,7 @@ while(flag<pulse_average){
     }
     data_sum=data_sum/63;
 
-     file1<<setiosflags(ios::left)<<setw(30)<<k*period*Matrix_Step<<setiosflags(ios::left)<<setw(30)<<data_sum<<endl;
+     file1<<k*period*Matrix_Step<<"\t"<<data_sum<<endl;
    }
 
   }
@@ -418,11 +417,11 @@ doub buffer=0,bufferC=0;
 
 bufferC=bufferC/63;
 
- file2<<setiosflags(ios::left)<<setw(30)<<detune_1/2/pi;
- file2<<setiosflags(ios::left)<<setw(30)<<buffer;
- file2<<setiosflags(ios::left)<<setw(30)<<bufferC;
- file2<<setiosflags(ios::left)<<setw(30)<<k*Matrix_Step;
- file2<<setiosflags(ios::left)<<setw(30)<<m<<endl;
+ file2<<detune_1/2/pi<<"\t";
+ file2<<buffer<<"\t";
+ file2<<bufferC<<"\t";
+ file2<<k*Matrix_Step<<"\t";
+ file2<<m<<endl;
 }
 
 ///////////////////////////////End of Sweeping//////////////////////////////////
