@@ -18,7 +18,7 @@
 using namespace gmm;
 using namespace std;
 typedef long double doub;
-extern int sweep(int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune);
+extern int sweep(doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune);
 extern doub sweep_single(doub period_set,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune);
 const doub pi=3.14159265358979323846264338327950288419716939937511;
 #endif // COMB_H_INCLUDED

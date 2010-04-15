@@ -232,7 +232,7 @@ int D1_coef (int L,int F,int mf){
  }
 
 
-int sweep(int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune)
+int sweep(doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune)
 {
 
   clear(A);
@@ -249,11 +249,11 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,doub converg
   nexp=expN;
   stringstream strstream,strstream2;
   string filename,filename2;
-  strstream<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
+  strstream<<"LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
-  strstream2<<"FS_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
+  strstream2<<"FS_"<<"LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
   strstream2>>filename2;
   file1.open(filename2.c_str(), ios::out | ios::trunc);
   file2.precision(15);
@@ -263,6 +263,7 @@ int sweep(int steps,int total_steps,doub PeakPower,doub convergence,doub converg
   //initial condiion
   col_matrix< vector<doub> > EnerDet(neq,neq);
   Atom atom;
+  LineWidth=LineW;
 
    EnergyDiff[8]=0.2012871*2*pi;
    EnergyDiff[24]=9.192631*2*pi;
@@ -477,7 +478,7 @@ while(flag<pulse_average){
 
 cout<<"npulse="<<k<<endl;
 
-doub buffer=0,buffer2=0,bufferP=0,bufferC;
+doub buffer=0,buffer2=0,bufferP=0,bufferC=0;
 
  for (int j=0;j<16;j++)
    for(int d=0;d<neq*neq;d++){
@@ -491,6 +492,7 @@ doub buffer=0,buffer2=0,bufferP=0,bufferC;
  for(int n=-4;n<5;n++){
    bufferC+=(pow(Result(RealComp(D1_coef(0,3,l),D1_coef(0,4,n)),k%(pulse_average+1)),2)+pow(Result(ImagComp(D1_coef(0,3,l),D1_coef(0,4,n)),k%(pulse_average+1)),2));
    }
+ bufferC=bufferC/63;
 
  buffer=buffer/(ninterval_1+ninterval_2+1);
  buffer2=buffer2/(ninterval_1+ninterval_2+1);

@@ -19,7 +19,7 @@ col_matrix< vector<doub> > Rc(neq,neq);
 col_matrix< vector<doub> > A(neq,neq);
 vector<doub> R_L(neq);
 doub lasDe = 0;
-doub LineWidth=0.7*2*pi;//0.0052227*2*pi
+doub LineWidth=0.7*2*pi;//0.0052227*2*pi;//
 
 
 
@@ -161,7 +161,7 @@ int D1_coef (int L,int F,int mf){
  }
 
 
-int sweep(doub period,int period_steps,int sweep_steps,doub Max_detune,doub peak_1,doub peak_2,doub convergence,doub convergence_threshold,int conS,int expN,int Msteps)
+int sweep(doub LineW,doub period,int period_steps,int sweep_steps,doub Max_detune,doub peak_1,doub peak_2,doub convergence,doub convergence_threshold,int conS,int expN,int Msteps)
 {
 
   clear(A);
@@ -176,11 +176,11 @@ int sweep(doub period,int period_steps,int sweep_steps,doub Max_detune,doub peak
   nexp=expN;
   stringstream strstream,strstream2;
   string filename,filename2;
-  strstream<<"CW"<<"dt_"<<period/period_steps<<peak_1<<"_uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<".txt";
+  strstream<<"CW_"<<"LW_"<<LineW/2/pi<<"_dt_"<<period/period_steps<<"_"<<peak_1<<"_uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<".txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
-  strstream2<<"FS_"<<"CW"<<"dt_"<<period/period_steps<<peak_1<<"_uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<".txt";
+  strstream2<<"FS_"<<"CW_LW_"<<LineW/2/pi<<"dt_"<<period/period_steps<<"_"<<peak_1<<"_uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<".txt";
   strstream2>>filename2;
   file1.open(filename2.c_str(), ios::out | ios::trunc);
   file2.precision(15);
@@ -189,6 +189,7 @@ int sweep(doub period,int period_steps,int sweep_steps,doub Max_detune,doub peak
   col_matrix< vector<doub> > y0R(neq,neq);
   //initial condiion
   Atom atom;
+  LineWidth=LineW;
 
       for(int j=3; j<5;j++)
          for(int k=-j;k<j+1;k++)
