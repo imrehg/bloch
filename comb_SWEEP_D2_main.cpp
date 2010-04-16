@@ -9,8 +9,7 @@ int main()
       //line width,sweep steps, total steps, power(uW/cm2),convergence condition,convergence threshold,convergency steps,ADM order,n1 interval,n2 interval,Matrix self multiplication,laser detune
 //     sweep(0.0052227*2*pi,20,500000,200,1/pow(10,5),0,10,12,10,600,10,0);
 
-for(int i=1;i<11;i+=1)
-     sweep(1/(pow(2,i))*2*pi,20,500000,200,1/pow(10,5),0,10,12,10,5000,10,0);
+     sweep(0.7*2*pi,20,500000,200,1/pow(10,5),0,10,12,10,600,10,0);
 
 //0.7*2*pi;//0.0052227*2*pi;//
 //fstream file;

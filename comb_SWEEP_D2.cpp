@@ -3,7 +3,7 @@
 doub phase=0;
 int pulse_average=100;
 const int npulse=100000;
-int ninterval_1=50,ninterval_2=500;//npulse = number of pulse; interval_1 =steps in interval 1 ..
+int ninterval_1=50,ninterval_2=500,ninterval_b=0;//npulse = number of pulse; interval_1 =steps in interval 1 ;ninterval_b= ninterval in a free iteration
 doub period0=10.87827848197104833208;
 doub frequency=0,peakO=0.84852647133780433846/2,FWHM=0.00175; //about 150uW/cm2 about 5ps  peak0=1.34163815218652164669542605053 for 2ps
 const int  neq=32,neq_gr=16,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
@@ -138,19 +138,57 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
   }    //  Bloch eq for off diagonal imaginary part
 
 }
-void solve_Martix(col_matrix< vector<doub> > &M, col_matrix<vector<doub> > &Trans, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
+void solve_Martix_new(col_matrix< vector<doub> > &M, col_matrix<vector<doub> > &Trans,col_matrix<vector<doub> > &Trans_Blank, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
 {
   col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_2B(neq*neq,neq*neq),Trans_Ave_B(neq*neq,neq*neq);
   col_matrix< vector<doub> > Msub(neq,neq);
   col_matrix<vector<doub> > Trans_D(neq*neq,neq*neq),Trans_B(neq*neq,neq*neq);
-/*  bulid up iteration matrix for zero field part  */
 
-    for(int i=0;i<neq*neq;i++)
-             Trans_B(i,i)=1;
 
+/* Build up for a free iteration interval*/
+
+      clear(Trans_B);
       clear(Trans_E);
       clear(Trans_I);
       clear(Trans_C);
+
+    for(int i=0;i<neq*neq;i++)
+             Trans_B(i,i)=1,Trans_I(i,i)=1;
+
+      copy(sub_matrix(M,sub_interval(0,neq),sub_interval(0,neq)),Msub);
+      fun_Matrix(Trans_E,Msub,D);
+
+      for(int j=1;j<=nexp;j++){
+          if((j%2)==1){
+          mult(Trans_E,Trans_I,Trans_C);
+          add(scaled(Trans_C,pow((dt2),j)/factorial(j)),Trans_B);
+          }else{
+            mult(Trans_E,Trans_C,Trans_I);
+            add(scaled(Trans_I,pow((dt2),j)/factorial(j)),Trans_B);
+          }
+         }
+
+        copy(Trans_B,Trans_2B);
+
+for(int j=0;j<(log(ninterval_b/2)/log(2));j++){
+   mult(Trans_B,Trans_2B,Trans_I);
+   copy(Trans_I,Trans_B);
+   copy(Trans_I,Trans_2B);
+}
+
+/* End of building*/
+
+
+/*  bulid up iteration matrix for zero field part  */
+
+
+      clear(Trans_B);
+      clear(Trans_E);
+      clear(Trans_I);
+      clear(Trans_C);
+
+    for(int i=0;i<neq*neq;i++)
+             Trans_B(i,i)=1;
 
        for(int i=0;i<neq*neq;i++)
              Trans_I(i,i)=1;
@@ -223,7 +261,7 @@ for(int j=0;j<(log(ninterval_2/2)/log(2));j++){
 }
 
 
-void solve_Martix_old(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans, col_matrix< vector<doub> >&Trans_Ave,doub *T, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
+void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans, col_matrix< vector<doub> >&Trans_Ave, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
 {
   col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_2B(neq*neq,neq*neq),Trans_Ave_B(neq*neq,neq*neq);
   col_matrix< vector<doub> > Msub(neq,neq);
@@ -396,16 +434,18 @@ for(int m= int(omp_get_thread_num()/2)*steps;m<=steps*(int(omp_get_thread_num()/
 {
    cout<<"T_"<<omp_get_thread_num()<<endl;
    cout<<m<<endl;
-   doub De=1.0*m*(pow(-1,omp_get_thread_num()%2))*1.0/total_steps;
+   doub De=1.0*m*(pow(-1,(omp_get_thread_num()%2+1)))*1.0/total_steps;
    doub period=period0/100*(100+De);
    doub peak=peakO*sqrt((100.0+De)/100);
    doub interval_1=FWHM*5,interval_2=period-interval_1;
    doub dt_1=interval_1/ninterval_1,dt_2=interval_2/ninterval_2;
+//   ninterval_b= int((phase_shift/2/pi*period)/dt_2);
    interval_2=period-interval_1;
    dt_2=interval_2/ninterval_2;
 
     col_matrix< vector<doub> > Result(neq*neq,pulse_average+1);
     col_matrix<vector<doub> > Trans(neq*neq,neq*neq);
+    col_matrix<vector<doub> > Trans_Blank(neq*neq,neq*neq);
     // IMPORTANT!!!!!!!
     // Remember to change it back to dense_matrix<doub> when dealing with left plus right circular polarization, since the matrix would be larger than.
     // IMPORTANT!!!!!!!!
@@ -471,7 +511,7 @@ if( k>=ninterval_2/2 && k<(ninterval_2/2+ninterval_1) ){
            }
 
 
-solve_Martix(M,Trans,EnerDet,dt_1,dt_2);
+solve_Martix(M,Trans,Trans_AVE,EnerDet,dt_1,dt_2);
 
 dense_matrix < doub > Trans_1(neq*neq,neq*neq),Trans_2(neq*neq,neq*neq),Trans_3(neq*neq,neq*neq);
 
@@ -569,7 +609,7 @@ doub buffer=0,buffer2=0,bufferP=0,bufferC=0;
  //       file2<<setiosflags(ios::left)<<setw(30)<<buffer2;
  file2<<bufferC<<"\t";
  file2<<bufferP<<"\t";
- file2<<k*Matrix_Step<<"\t";
+ file2<<k*Matrix_Step*period<<"\t";
  file2<<m<<endl;
 }
 

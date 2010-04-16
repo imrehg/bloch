@@ -421,7 +421,7 @@ bufferC=bufferC/63;
  file2<<detune_1/2/pi<<"\t";
  file2<<buffer<<"\t";
  file2<<bufferC<<"\t";
- file2<<k*Matrix_Step<<"\t";
+ file2<<k*Matrix_Step*period<<"\t";
  file2<<m<<endl;
 }
 
