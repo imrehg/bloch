@@ -138,8 +138,92 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
   }    //  Bloch eq for off diagonal imaginary part
 
 }
+void solve_Martix(col_matrix< vector<doub> > &M, col_matrix<vector<doub> > &Trans, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
+{
+  col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_2B(neq*neq,neq*neq),Trans_Ave_B(neq*neq,neq*neq);
+  col_matrix< vector<doub> > Msub(neq,neq);
+  col_matrix<vector<doub> > Trans_D(neq*neq,neq*neq),Trans_B(neq*neq,neq*neq);
+/*  bulid up iteration matrix for zero field part  */
 
-void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans, col_matrix< vector<doub> >&Trans_Ave,doub *T, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
+    for(int i=0;i<neq*neq;i++)
+             Trans_B(i,i)=1;
+
+      clear(Trans_E);
+      clear(Trans_I);
+      clear(Trans_C);
+
+       for(int i=0;i<neq*neq;i++)
+             Trans_I(i,i)=1;
+
+      copy(sub_matrix(M,sub_interval(0,neq),sub_interval(0,neq)),Msub);
+      fun_Matrix(Trans_E,Msub,D);
+
+      for(int j=1;j<=nexp;j++){
+          if((j%2)==1){
+          mult(Trans_E,Trans_I,Trans_C);
+          add(scaled(Trans_C,pow((dt2),j)/factorial(j)),Trans_B);
+          }else{
+            mult(Trans_E,Trans_C,Trans_I);
+            add(scaled(Trans_I,pow((dt2),j)/factorial(j)),Trans_B);
+          }
+         }
+
+        copy(Trans_B,Trans_2B);
+
+for(int j=0;j<(log(ninterval_2/2)/log(2));j++){
+   mult(Trans_B,Trans_2B,Trans_I);
+   copy(Trans_I,Trans_B);
+   copy(Trans_I,Trans_2B);
+}
+
+/*  End of building  */
+
+
+/*  bulid up iteration matrix for pulse field part  */
+
+  for(int t=ninterval_2/2;t<(ninterval_2/2+ninterval_1);t++){
+  cout<<t<<endl;
+      clear(Trans_E);
+      clear(Trans_I);
+      clear(Trans_C);
+      clear(Trans_B);
+
+       for(int i=0;i<neq*neq;i++)
+             Trans_I(i,i)=1,Trans_B(i,i)=1;
+
+      copy(sub_matrix(M,sub_interval(0,neq),sub_interval((t-1)*neq,neq)),Msub);
+      fun_Matrix(Trans_E,Msub,D);
+
+      for(int j=1;j<=nexp;j++){
+          if((j%2)==1){
+          mult(Trans_E,Trans_I,Trans_C);
+          add(scaled(Trans_C,pow((dt1),j)/factorial(j)),Trans_B);
+          }else{
+            mult(Trans_E,Trans_C,Trans_I);
+            add(scaled(Trans_I,pow((dt1),j)/factorial(j)),Trans_B);
+          }
+         }
+
+     if((t%2)==((ninterval_2/2)%2)){
+        mult(Trans_B,Trans,Trans_D);
+     }else{
+        mult(Trans_B,Trans_D,Trans);
+     }
+
+  }
+
+  if((ninterval_1%2)==1)
+      copy(Trans_D,Trans);
+
+/*  End of building  */
+
+   mult(Trans,Trans_2B,Trans_D);
+   mult(Trans_2B,Trans_D,Trans);
+
+}
+
+
+void solve_Martix_old(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans, col_matrix< vector<doub> >&Trans_Ave,doub *T, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
 {
   col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_2B(neq*neq,neq*neq),Trans_Ave_B(neq*neq,neq*neq);
   col_matrix< vector<doub> > Msub(neq,neq);
@@ -154,7 +238,7 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
       clear(Trans_E);
       clear(Trans_I);
       clear(Trans_C);
-      cout<<t<<endl;
+//      cout<<t<<endl;
 
        for(int i=0;i<neq*neq;i++)
              Trans_I(i,i)=1;
@@ -243,7 +327,7 @@ int sweep(doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,d
   clear(EnergyDiff);
   doub phase=0;
   ninterval_1 =n1-(n1%4);
-  ninterval_2 =n2-(n2%4);
+  ninterval_2 = pow(2,int(log(n2)/log(2)));
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
   peakO = sqrt(PeakPower/150)*0.84852647133780433846/2;
   nexp=expN;
@@ -297,20 +381,22 @@ int sweep(doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,d
  int Matrix_Step = pow(2,(Msteps-1));
  pulse_average=(conS/Matrix_Step+1);
 
-#pragma omp num_threads(2)
+ int num_thread = 8;
+
+#pragma omp num_threads(num_thread)
 #pragma omp parallel for
-for(int thread=0;thread<2;thread++)
+for(int thread=0;thread<num_thread;thread++)
 {
    doub *Time= new doub[ninterval_1+ninterval_2+1];
    col_matrix< vector<doub> > M(neq,(ninterval_1+ninterval_2+1)*neq);//Rabifrequence*2
    int ninterval_m = (npulse-1);
 
 
-for(int m=0;m<=steps;m++)
+for(int m= int(omp_get_thread_num()/2)*steps;m<=steps*(int(omp_get_thread_num()/2)+1);m++)
 {
-
+   cout<<"T_"<<omp_get_thread_num()<<endl;
    cout<<m<<endl;
-   doub De=1.0*m*(pow(-1,omp_get_thread_num()))*1.0/total_steps;
+   doub De=1.0*m*(pow(-1,omp_get_thread_num()%2))*1.0/total_steps;
    doub period=period0/100*(100+De);
    doub peak=peakO*sqrt((100.0+De)/100);
    doub interval_1=FWHM*5,interval_2=period-interval_1;
@@ -385,7 +471,7 @@ if( k>=ninterval_2/2 && k<(ninterval_2/2+ninterval_1) ){
            }
 
 
-solve_Martix(M,Trans,Trans_AVE,Time,EnerDet,dt_1,dt_2);
+solve_Martix(M,Trans,EnerDet,dt_1,dt_2);
 
 dense_matrix < doub > Trans_1(neq*neq,neq*neq),Trans_2(neq*neq,neq*neq),Trans_3(neq*neq,neq*neq);
 
@@ -396,6 +482,7 @@ for(int j=0;j<(Msteps-1);j++){
    mult(Trans_1,Trans_2,Trans_3);
    copy(Trans_3,Trans_1);
    copy(Trans_3,Trans_2);
+   cout<<"S_"<<j<<endl;
 }
 
 copy(Trans_1,Trans);
@@ -455,26 +542,6 @@ while(flag<pulse_average){
    }
 
   }
-//
-//  ninterval_m = k;
-
-//}else{
-//
-//  while(flag<pulse_average){
-//
-//    for(int a=0;a<neq;a++)
-//      for(int b=0;b<neq;b++){
-//	Result(RealComp(a,b),(k+1)%(pulse_average+1))=0;
-//	Result(ImagComp(a,b),(k+1)%(pulse_average+1))=0;}
-//
-//    mult(Trans,mat_col(Result,(k)%(pulse_average+1)),mat_col(Result,(k+1)%(pulse_average+1)));
-//    k+=1;
-//
-//    if(k==ninterval_m)
-//      flag=pulse_average+1;
-//  }
-//
-//}
 
 cout<<"npulse="<<k<<endl;
 

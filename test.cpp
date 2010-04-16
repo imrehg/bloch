@@ -84,9 +84,11 @@ int main(){
 
 //  std::cout << std::setprecision(10);
 // std::cout<<RealComp(15,15);
+int n2=1;
 
-for(int i=0; i<2;++i)
- cout<<i++;
+while (n2){
+cin>>n2;
+cout<<pow(2,int(log(n2)/log(2)));}
 
  return 0;
 
