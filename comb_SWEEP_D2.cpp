@@ -577,7 +577,7 @@ while(flag<pulse_average){
     data_sum+=(pow(Result(RealComp(D1_coef(0,3,l),D1_coef(0,4,n)),k%(pulse_average+1)),2)+pow(Result(ImagComp(D1_coef(0,3,l),D1_coef(0,4,n)),k%(pulse_average+1)),2));
     }
     data_sum=data_sum/63;
-
+    if(m==0)
      file1<<k*period*Matrix_Step<<"\t"<<data_sum<<endl;
    }
 
@@ -587,11 +587,15 @@ cout<<"npulse="<<k<<endl;
 
 doub buffer=0,buffer2=0,bufferP=0,bufferC=0;
 
- for (int j=0;j<16;j++)
+ for (int j=-3;j<4;j++)
    for(int d=0;d<neq*neq;d++){
-     buffer+=Trans_AVE(j,d)*Result(d,k%(pulse_average+1));
-     //                  buffer2+=Trans_AVE(0,d)*Result(d,k%(pulse_average+1));
+     buffer+=Trans_AVE(RealComp(D1_coef(1,3,j),D1_coef(1,3,j)),d)*Result(d,k%(pulse_average+1));
    }
+ for (int j=-3;j<5;j++)
+   for(int d=0;d<neq*neq;d++){
+     buffer2+=Trans_AVE(RealComp(D1_coef(1,4,j),D1_coef(1,4,j)),d)*Result(d,k%(pulse_average+1));
+   }
+
  for(int c=0;c<neq;c++)
    bufferP+=Result(c,k%(pulse_average+1));
 
@@ -605,8 +609,9 @@ doub buffer=0,buffer2=0,bufferP=0,bufferC=0;
  buffer2=buffer2/(ninterval_1+ninterval_2+1);
 
  file2<<1/period<<"\t";
+ file2<<buffer+buffer2<<"\t";
  file2<<buffer<<"\t";
- //       file2<<setiosflags(ios::left)<<setw(30)<<buffer2;
+ file2<<buffer2<<"\t";
  file2<<bufferC<<"\t";
  file2<<bufferP<<"\t";
  file2<<k*Matrix_Step*period<<"\t";

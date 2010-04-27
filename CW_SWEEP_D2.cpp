@@ -242,21 +242,10 @@ for(int m=0;m<=sweep_steps;m++)
           }
         }
   //initialzing the energy level difference for D2 line
+  /*
+  It is weird that the lower level detuning is not appearing here in the bloch equation, but mathmeticall it is CORRECT!!
+  */
 
-//      for(int j=3; j<5;j++)
-//         for(int k=-j;k<j+1;k++)
-//             for(int m=3; m<5;m++)
-//                for(int n=-m;n<m+1;n++){
-//                    if(m==3){
-//                    EnerDet(D1_coef(0,j,k),D1_coef(1,m,n))=0;
-//                    EnerDet(D1_coef(1,m,n),D1_coef(0,j,k))=0;
-//                    }else if(j==3){
-//                       EnerDet(D1_coef(0,j,k),D1_coef(1,m,n))+=EnergyDiff[24];
-//                       EnerDet(D1_coef(1,m,n),D1_coef(0,j,k))=-EnerDet(D1_coef(0,j,k),D1_coef(1,m,n));
-//                    }
-//                }
-//
-//clear(EnerDet);
 
     for(int j=3; j<5;j++)
          for(int k=-j;k<j+1;k++)
