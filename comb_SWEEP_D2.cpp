@@ -354,7 +354,7 @@ int D1_coef (int L,int F,int mf){
  }
 
 
-int sweep(doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune)
+int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune)
 {
 
   clear(A);
@@ -371,11 +371,11 @@ int sweep(doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,d
   nexp=expN;
   stringstream strstream,strstream2;
   string filename,filename2;
-  strstream<<"LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
+  strstream<<"comb_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
-  strstream2<<"FS_"<<"LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
+  strstream2<<"comb_FS_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
   strstream2>>filename2;
   file1.open(filename2.c_str(), ios::out | ios::trunc);
   file2.precision(15);
@@ -386,6 +386,7 @@ int sweep(doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,d
   col_matrix< vector<doub> > EnerDet(neq,neq);
   Atom atom;
   LineWidth=LineW;
+  doub gamma2=g2/1E9;
 
    EnergyDiff[8]=0.2012871*2*pi;
    EnergyDiff[24]=9.192631*2*pi;
@@ -419,7 +420,7 @@ int sweep(doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,d
  int Matrix_Step = pow(2,(Msteps-1));
  pulse_average=(conS/Matrix_Step+1);
 
- int num_thread = 8;
+ int num_thread = 4;
 
 #pragma omp num_threads(num_thread)
 #pragma omp parallel for
@@ -473,7 +474,7 @@ for(int m= int(omp_get_thread_num()/2)*steps;m<=steps*(int(omp_get_thread_num()/
  }
 
 for(int i=0;i<neq_gr;i++)
-   R_gr[i+neq-neq_gr]=0.000001*2*pi;
+   R_gr[i+neq-neq_gr]=gamma2;
 
  //initailizing for relaxation rate
 

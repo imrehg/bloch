@@ -161,7 +161,7 @@ int D1_coef (int L,int F,int mf){
  }
 
 
-int sweep(doub LineW,doub period,int period_steps,int sweep_steps,doub Max_detune,doub peak_1,doub peak_2,doub convergence,doub convergence_threshold,int conS,int expN,int Msteps)
+int sweep(doub g2, doub LineW,doub period,int period_steps,int sweep_steps,doub Max_detune,doub peak_1,doub peak_2,doub convergence,doub convergence_threshold,int conS,int expN,int Msteps)
 {
 
   clear(A);
@@ -176,11 +176,11 @@ int sweep(doub LineW,doub period,int period_steps,int sweep_steps,doub Max_detun
   nexp=expN;
   stringstream strstream,strstream2;
   string filename,filename2;
-  strstream<<"CW_"<<"LW_"<<LineW/2/pi<<"_dt_"<<period/period_steps<<"_"<<peak_1<<"_uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<".txt";
+  strstream<<"CW_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"_dt_"<<period/period_steps<<"_"<<peak_1<<"_uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<".txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
-  strstream2<<"FS_"<<"CW_LW_"<<LineW/2/pi<<"dt_"<<period/period_steps<<"_"<<peak_1<<"_uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<".txt";
+  strstream2<<"CW_"<<"FS_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"dt_"<<period/period_steps<<"_"<<peak_1<<"_uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<".txt";
   strstream2>>filename2;
   file1.open(filename2.c_str(), ios::out | ios::trunc);
   file2.precision(15);
@@ -190,6 +190,7 @@ int sweep(doub LineW,doub period,int period_steps,int sweep_steps,doub Max_detun
   //initial condiion
   Atom atom;
   LineWidth=LineW;
+  doub gamma2=g2/1E9;
 
       for(int j=3; j<5;j++)
          for(int k=-j;k<j+1;k++)
@@ -203,9 +204,11 @@ int sweep(doub LineW,doub period,int period_steps,int sweep_steps,doub Max_detun
  long Matrix_Step = pow(2,(Msteps-1));
  pulse_average=(conS/Matrix_Step+1);
 
-#pragma omp num_threads(2)
+ int num_thread = 4;
+
+#pragma omp num_threads(num_thread)
 #pragma omp parallel for
-for(int thread=0;thread<2;thread++)
+for(int thread=0;thread<num_thread;thread++)
 {
 
    col_matrix< vector<doub> > M(neq,neq);//Rabifrequence*2
@@ -213,11 +216,11 @@ for(int thread=0;thread<2;thread++)
    col_matrix< vector<doub> > EnerDet(neq,neq);
    vector<doub> EnergyDiff(neq-1);
 
-for(int m=0;m<=sweep_steps;m++)
+for(int m= int(omp_get_thread_num()/2)*sweep_steps;m<=sweep_steps*(int(omp_get_thread_num()/2)+1);m++)
 {
 
    cout<<m<<endl;
-   doub De=1.0*m*(pow(-1,omp_get_thread_num()))*1.0/sweep_steps;
+   doub De=1.0*m*(pow(-1,omp_get_thread_num()))*1.0/sweep_steps/num_thread;
    doub detune_1=Max_detune*De,detune_2=0;
    dt=period/period_steps;
 
@@ -296,7 +299,7 @@ for(int m=0;m<=sweep_steps;m++)
  }
 
 for(int i=0;i<neq_gr;i++)
-   R_gr[i+neq-neq_gr]=0.000001*2*pi;
+   R_gr[i+neq-neq_gr]=gamma2;
 
  //initailizing for relaxation rate
 
@@ -393,12 +396,17 @@ while(flag<pulse_average){
 
 cout<<"n_period="<<k<<endl;
 
-doub buffer=0,bufferC=0;
+doub buffer=0,buffer1=0,bufferC=0;
 
  for (int j=0;j<16;j++)
      buffer+=Result(j,k%(pulse_average+1));
 
+// Total upper level population
 
+ for (int j=0;j<9;j++)
+     buffer1+=Result(j,k%(pulse_average+1));
+
+// F=4 upper level pupulation
 
  for(int l=-3;l<4;l++)
  for(int n=-4;n<5;n++){
@@ -409,6 +417,8 @@ bufferC=bufferC/63;
 
  file2<<detune_1/2/pi<<"\t";
  file2<<buffer<<"\t";
+ file2<<buffer1<<"\t";
+ file2<<buffer-buffer1<<"\t";
  file2<<bufferC<<"\t";
  file2<<k*Matrix_Step*period<<"\t";
  file2<<m<<endl;

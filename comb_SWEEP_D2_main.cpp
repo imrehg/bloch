@@ -3,9 +3,9 @@
 
 int main()
 {
-//    for(int i=1;i<11;i++)
-     sweep(0.7*2*pi,80,2000000,100000,1/pow(10,6),0,10,12,10,600,10,0);
-      //line width,sweep steps, total steps, power(uW/cm2),convergence condition,convergence threshold,convergency steps,ADM order,n1 interval,n2 interval,Matrix self multiplication,laser detune
+    for(int i=1;i<15;i++)
+     sweep(50*2*pi,0.7*2*pi,40,4000000,100*i,5/pow(10,7),0,10,12,10,600,15,0);
+      //gamma2(Hz),line width(GHz),sweep steps, total steps, power(uW/cm2),convergence condition,convergence threshold,convergency steps,ADM order,n1 interval,n2 interval,Matrix self multiplication,laser detune
 
 //0.7*2*pi;//0.0052227*2*pi;//
 //fstream file;
