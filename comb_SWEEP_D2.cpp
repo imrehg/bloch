@@ -2,7 +2,7 @@
 #include "comb.h"
 doub phase=0;
 int pulse_average=100;
-const int npulse=100000;
+const int npulse=10000000;
 int ninterval_1=50,ninterval_2=500,ninterval_b=0;//npulse = number of pulse; interval_1 =steps in interval 1 ;ninterval_b= ninterval in a free iteration
 doub period0=10.87827848197104833208;
 doub frequency=0,peakO=0.84852647133780433846/2,FWHM=0.00175; //about 150uW/cm2 about 5ps  peak0=1.34163815218652164669542605053 for 2ps
@@ -420,7 +420,7 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
  int Matrix_Step = pow(2,(Msteps-1));
  pulse_average=(conS/Matrix_Step+1);
 
- int num_thread = 4;
+ int num_thread = 8;
 
 #pragma omp num_threads(num_thread)
 #pragma omp parallel for

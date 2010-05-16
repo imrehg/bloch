@@ -184,6 +184,15 @@ int sweep(doub g2, doub LineW,doub period,int period_steps,int sweep_steps,doub 
   strstream2>>filename2;
   file1.open(filename2.c_str(), ios::out | ios::trunc);
   file2.precision(15);
+
+ file2<<"Rap Rate Deutne"<<"\t";
+ file2<<"Upper Level Population"<<"\t";
+ file2<<"F=4 Upper Level Population"<<"\t";
+ file2<<"F=3 Upper Level Population"<<"\t";
+ file2<<"Ground State Coherence"<<"\t";
+ file2<<"Total Population"<<"\t";
+ file2<<"Stable time"<<"\t"<<endl;
+
   col_matrix< vector<doub> > y0I(neq,neq);
   //initial condition
   col_matrix< vector<doub> > y0R(neq,neq);
@@ -378,7 +387,7 @@ while(flag<pulse_average){
     if(k==ninterval_m)
       flag=pulse_average+1;
 
-    if(omp_get_thread_num()==0){
+    if(omp_get_thread_num()==0&&m==0){
       doub data_sum=0;
 //     for(int c=0;c<16;c++)
 //      data_sum+=Result(c,k%(pulse_average+1));
@@ -388,15 +397,18 @@ while(flag<pulse_average){
     data_sum+=(pow(Result(RealComp(D1_coef(0,3,l),D1_coef(0,4,n)),k%(pulse_average+1)),2)+pow(Result(ImagComp(D1_coef(0,3,l),D1_coef(0,4,n)),k%(pulse_average+1)),2));
     }
     data_sum=data_sum/63;
-
      file1<<k*period*Matrix_Step<<"\t"<<data_sum<<endl;
    }
 
   }
 
-cout<<"n_period="<<k<<endl;
 
-doub buffer=0,buffer1=0,bufferC=0;
+doub buffer_total=0,buffer=0,buffer1=0,bufferC=0;
+
+ for (int j=0;j<32;j++)
+    buffer_total+=Result(j,k%(pulse_average+1));
+
+// Total population
 
  for (int j=0;j<16;j++)
      buffer+=Result(j,k%(pulse_average+1));
@@ -420,8 +432,9 @@ bufferC=bufferC/63;
  file2<<buffer1<<"\t";
  file2<<buffer-buffer1<<"\t";
  file2<<bufferC<<"\t";
+ file2<<buffer_total<<"\t";
  file2<<k*Matrix_Step*period<<"\t";
- file2<<m<<endl;
+ file2<<endl;
 }
 
 ///////////////////////////////End of Sweeping//////////////////////////////////
