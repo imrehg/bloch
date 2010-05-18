@@ -1,28 +1,70 @@
 #define GMM_USES_LAPACK
 #include "comb.h"
-doub phase=0;
-int pulse_average=100;
-const int npulse=10000000;
-int ninterval_1=50,ninterval_2=500,ninterval_b=0;//npulse = number of pulse; interval_1 =steps in interval 1 ;ninterval_b= ninterval in a free iteration
-doub period0=10.87827848197104833208;
-doub frequency=0,peakO=0.84852647133780433846/2,FWHM=0.00175; //about 150uW/cm2 about 5ps  peak0=1.34163815218652164669542605053 for 2ps
-const int  neq=32,neq_gr=16,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
+
+//Initializing the class
+comb::comb()
+:neq(32),neq_gr(16)
+{
+
+////*Laser parameters*////
+
+phase=0;
+//Phase of the comb laser, which set to zero for all current case
+
+pulse_average=100;
+//number of pulses to average over for stop condition
+
+npulse=10000000;
+//number for the maxium pulses applied
+
+ninterval_1=50;
+ninterval_2=500;
+ninterval_b=0;
+ninterval=npulse*(ninterval_1+ninterval_2);
+//interval_1 =steps in interval 1 ;ninterval_b= ninterval in a free iteration,ninterval= iteration terms
+
+period0=10.87827848197104833208;
+//the center rep rate
+
+lasDe = 0;
+peakO=0.84852647133780433846/2;
+FWHM=0.00175;
+//frequency is the detune of the carrier frequency,peak0 is the peak for the gaussian for about 150uW in FWHM 5ps
+//peak0=1.34163815218652164669542605053 for 2ps
+
+////*Laser parameters setup end*////
+
+////*Atom parameters*////
+
+LineWidth=0.7*2*pi;
+//The line width of upper level,0.0052227*2*pi is natural line width;
+
+
 int nexp=12;
+//nexp= terms of ADM expansion,
+
+////*Atom parameters end*////
+
 vector<doub> r(neq);
 //total decay constant
+
 vector<doub> R(neq);
 //relaxation rate
+
+
 vector<doub> R_gr(neq);
 //relazation rate of ground state
-col_matrix< vector<doub> > Rc(neq,neq);
+
 col_matrix< vector<doub> > A(neq,neq);
-vector<doub> R_L(neq);
-doub lasDe = 0;
+//A matrix
+
 vector<doub> EnergyDiff(neq-1);
-doub LineWidth=0.7*2*pi;//0.0052227*2*pi;//
+//Level differency Vector
 
 
-int RealComp(int i,int j)
+}
+
+int comb::RealComp(int i,int j)
 {
   int c=0;
      if(i==j) c=i;
@@ -34,7 +76,7 @@ int RealComp(int i,int j)
 
 }
 
-int ImagComp(int i,int j)
+int comb::ImagComp(int i,int j)
 {
   int c=0;
      if(i==j) c=0;
@@ -47,14 +89,14 @@ int ImagComp(int i,int j)
 }
 
 
-int factorial (int num)
+int comb::factorial (int num)
 {
  if (num==1)
   return 1;
  return factorial(num-1)*num; // recursive call
 }
 
-doub ReRabi(doub x,doub period,doub peak)//脈衝包絡線函數(實部)，高斯函數*Re[e^{-i*phase}]
+doub comb::ReRabi(doub x,doub period,doub peak)//脈衝包絡線函數(實部)，高斯函數*Re[e^{-i*phase}]
 {
   doub value=0;
 
@@ -63,7 +105,7 @@ doub ReRabi(doub x,doub period,doub peak)//脈衝包絡線函數(實部)，高�
   return peak*value;
 }
 
-doub ImRabi(doub x,doub period,doub peak)//脈衝包絡線函數(虛部)，高斯函數*Im[e^{-i*phase}]
+doub comb::ImRabi(doub x,doub period,doub peak)//脈衝包絡線函數(虛部)，高斯函數*Im[e^{-i*phase}]
 {
   doub value=0,time=0,factor=0;
   int i=0;
@@ -79,7 +121,7 @@ doub ImRabi(doub x,doub period,doub peak)//脈衝包絡線函數(虛部)，高�
 }
 
 
-void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,col_matrix< vector<doub> >&D)//B imaginary part ; C real part; H rabi requence; w time
+void comb::fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,col_matrix< vector<doub> >&D)//B imaginary part ; C real part; H rabi requence; w time
 {
 
   for (int i=0;i<neq;i++){
@@ -107,7 +149,7 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
 
  for (int j=1;j<neq;j++){
     for (int i=0;i<j;i++){
-       Trans(RealComp(i,j),RealComp(i,j))=-(R[i]+R[j]+R_L[i]+R_gr[i]+R_gr[j])/2;
+       Trans(RealComp(i,j),RealComp(i,j))=-(R[i]+R[j]+R_gr[i]+R_gr[j])/2;
        Trans(RealComp(i,j),ImagComp(i,j))=D(i,j);
        for (int l=0;l<neq;l++){
            if(l<j){
@@ -128,7 +170,7 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
 
  for (int j=1;j<neq;j++){
    for (int i=0;i<j;i++){
-       Trans(ImagComp(i,j),ImagComp(i,j))=-(R[i]+R[j]+R_L[i]+R_gr[i]+R_gr[j])/2;
+       Trans(ImagComp(i,j),ImagComp(i,j))=-(R[i]+R[j]+R_gr[i]+R_gr[j])/2;
        Trans(ImagComp(i,j),RealComp(i,j))=-D(i,j);
       for (int l=0;l<neq;l++){
             Trans(ImagComp(i,j),RealComp(l,j))+=H(i,l);
@@ -138,7 +180,7 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
   }    //  Bloch eq for off diagonal imaginary part
 
 }
-void solve_Martix_new(col_matrix< vector<doub> > &M, col_matrix<vector<doub> > &Trans,col_matrix<vector<doub> > &Trans_Blank, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
+void comb::solve_Martix_new(col_matrix< vector<doub> > &M, col_matrix<vector<doub> > &Trans,col_matrix<vector<doub> > &Trans_Blank, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
 {
   col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_2B(neq*neq,neq*neq),Trans_Ave_B(neq*neq,neq*neq);
   col_matrix< vector<doub> > Msub(neq,neq);
@@ -261,7 +303,7 @@ for(int j=0;j<(log(ninterval_2/2)/log(2));j++){
 }
 
 
-void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans, col_matrix< vector<doub> >&Trans_Ave, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
+void comb::solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans, col_matrix< vector<doub> >&Trans_Ave, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
 {
   col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_2B(neq*neq,neq*neq),Trans_Ave_B(neq*neq,neq*neq);
   col_matrix< vector<doub> > Msub(neq,neq);
@@ -346,7 +388,7 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
 }
 
 
-int D1_coef (int L,int F,int mf){
+int comb::D1_coef (int L,int F,int mf){
      if(F==3)
       return 32-(L*16+(mf+4));
      if(F==4)
@@ -354,14 +396,12 @@ int D1_coef (int L,int F,int mf){
  }
 
 
-int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune)
+int comb::sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune)
 {
 
   clear(A);
   clear(R);
   clear(r);
-  clear(Rc);
-  clear(R_L);
   clear(EnergyDiff);
   doub phase=0;
   ninterval_1 =n1-(n1%4);
