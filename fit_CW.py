@@ -38,17 +38,15 @@ def fit(line):
 
 a = [fit(gg) for gg in g2]
 data = open( filename, 'w')
-ll = ['detune(uW)\t','y_offset\t','x_offset(Hz)\t','width(Hz)\t','peak\t','slope\t']
-
-for name in ll:
- data.write(name)
-
-data.write('\n')
+data.write('detune(uW)\ty_offset\tx_offset(Hz)\twidth(Hz)\tpeak\tslope\n')
 
 for element in a:
 
- for value in element:
-  data.write('%g\t' %value)   
+ for index,value in enumerate(element):
+  data.write('%g' %value)
+  if (index+1 < len(element)):
+   data.write("\t")   
+ 
  data.write('\n')
 
 data.close()
