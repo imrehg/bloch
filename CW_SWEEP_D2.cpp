@@ -176,11 +176,11 @@ int sweep(doub g2, doub LineW,doub period,int period_steps,int sweep_steps,doub 
   nexp=expN;
   stringstream strstream,strstream2;
   string filename,filename2;
-  strstream<<"CW_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"_dt_"<<period/period_steps<<"_"<<peak_1<<"_uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<".txt";
+  strstream<<"./Data/CW_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"_dt_"<<period/period_steps<<"_"<<peak_1<<"_uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<".txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
-  strstream2<<"CW_"<<"FS_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"dt_"<<period/period_steps<<"_"<<peak_1<<"_uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<".txt";
+  strstream2<<"./Data/CW_"<<"FS_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"dt_"<<period/period_steps<<"_"<<peak_1<<"_uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<".txt";
   strstream2>>filename2;
   file1.open(filename2.c_str(), ios::out | ios::trunc);
   file2.precision(15);
