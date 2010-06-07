@@ -58,7 +58,7 @@ doub ReRabi(doub x,doub period,doub peak)//脈衝包絡線函數(實部)，高�
 {
   doub value=0;
 
-  value=exp(-pow((x-0.5*period)/FWHM,2));
+  value=exp(-pow((x-0.5*period)/FWHM,2)/2);
 
   return peak*value;
 }
@@ -68,11 +68,11 @@ doub ImRabi(doub x,doub period,doub peak)//脈衝包絡線函數(虛部)，高�
   doub value=0,time=0,factor=0;
   int i=0;
   if(x<0.5*period)
-    value=exp(-pow(x/FWHM,2))*sin(-i*phase);
+    value=exp(-pow(x/FWHM,2)/2)*sin(-i*phase);
   else
   {
   i=int ((x-0.5*period)/period+1);
-  value=exp(-pow((x-i*period)/FWHM,2))*sin(-i*phase);
+  value=exp(-pow((x-i*period)/FWHM,2)/2)*sin(-i*phase);
   }
 
   return peak*value;
@@ -354,7 +354,7 @@ int D1_coef (int L,int F,int mf){
  }
 
 
-int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune)
+int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune,doub A_Factor)
 {
 
   clear(A);
@@ -367,15 +367,16 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
   ninterval_1 =n1-(n1%4);
   ninterval_2 = pow(2,int(log(n2)/log(2)));
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
-  peakO = sqrt(PeakPower/150)*0.84852647133780433846/2;
+  FWHM = A_Factor;//0.00175
+  peakO = sqrt(PeakPower/150*0.00175/A_Factor)*0.84852647133780433846/2;
   nexp=expN;
   stringstream strstream,strstream2;
   string filename,filename2;
-  strstream<<"./Data/comb_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
+  strstream<<"./Data/comb_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S.txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
-  strstream2<<"./Data/comb_FS_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_S.txt";
+  strstream2<<"./Data/comb_FS_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S.txt";
   strstream2>>filename2;
   file1.open(filename2.c_str(), ios::out | ios::trunc);
   file2.precision(15);
@@ -420,7 +421,7 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
  int Matrix_Step = pow(2,(Msteps-1));
  pulse_average=(conS/Matrix_Step+1);
 
- int num_thread = 2;
+ int num_thread = 8;
 
 #pragma omp num_threads(num_thread)
 #pragma omp parallel for
