@@ -6,7 +6,7 @@ const int npulse=100000;
 int ninterval=50;//npulse = number of pulse; interval_1 =steps in interval 1 ..
 doub dt;
 doub period0=10.87827848197104833208;
-doub frequency=0,peakO=0.00989116604990337187/2; //about 100uW/cm2 about 5ps  peak0=1.34163815218652164669542605053 for 2ps
+doub frequency=0,peakO=0.00989116604990337187/2; //about 100uW/cm2
 const int  neq=32,neq_gr=16; // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 int nexp=12;
 vector<doub> r(neq);

@@ -29,8 +29,8 @@ def fit(line):
   savefig('CW_g2_20_LW_0.7_dt_0.01_%s_uWcm2_1e-10_conS_10_O=12.png'%line) 
   clf()
   p1[0]=p1[0]/1e10
-  p1[1]=p1[1]/1e7
-  p1[2]=p1[2]/1e7
+  p1[1]=p1[1]/1e7*1e9
+  p1[2]=p1[2]/1e7*1e9
   p1[3]=p1[3]/1e10
   pfinal=r_[float(line)*2,p1]
   return pfinal
@@ -38,7 +38,7 @@ def fit(line):
 
 a = [fit(gg) for gg in g2]
 data = open( filename, 'w')
-data.write('detune(uW)\ty_offset\tx_offset(Hz)\twidth(Hz)\tpeak\tslope\n')
+data.write('detune(uW)\ty_offset\tx_offset(Hz)\twidth(Hz)\tpeak\n')
 
 for element in a:
 
