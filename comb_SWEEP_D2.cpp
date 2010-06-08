@@ -5,7 +5,7 @@ int pulse_average=100;
 const int npulse=10000000;
 int ninterval_1=50,ninterval_2=500,ninterval_b=0;//npulse = number of pulse; interval_1 =steps in interval 1 ;ninterval_b= ninterval in a free iteration
 doub period0=10.87827848197104833208;
-doub frequency=0,peakO=0.84852647133780433846/2,FWHM=0.00175; //about 150uW/cm2 about 5ps  peak0=1.34163815218652164669542605053 for 2ps
+doub frequency=0,peakO=0.02428235615859994948,FWHM=1; //about 100uW/cm2 A = 1ns  peak0=1.34163815218652164669542605053 for 2ps
 const int  neq=32,neq_gr=16,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 int nexp=12;
 vector<doub> r(neq);
@@ -368,7 +368,7 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
   ninterval_2 = pow(2,int(log(n2)/log(2)));
   fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
   FWHM = A_Factor;//0.00175
-  peakO = sqrt(PeakPower/150*0.00175/A_Factor)*0.84852647133780433846/2;
+  peakO = sqrt(PeakPower/100/A_Factor)*0.02428235615859994948;
   nexp=expN;
   stringstream strstream,strstream2;
   string filename,filename2;
