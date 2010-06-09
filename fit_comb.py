@@ -30,15 +30,16 @@ def fit(line):
   clf()
   p1[0]=p1[0]/1e10
   p1[1]=p1[1]/1e7*1e11
-  p1[2]=p1[2]/1e7*1e11
-  p1[3]=p1[3]/1e10
-  pfinal=r_[float(line),p1]
+  p1[3]=p1[3]/1e10/p1[2]*2/pi
+# the remeanig part of the equations is to calculate for actually peak value.
+  p1[2]=p1[2]/1e7*1e11  
+  pfinal=r_[float(line),p1,abs(p1[3]/p1[0])]
   return pfinal
 
 a = [fit(gg) for gg in g2]
 
 data = open( filename, 'w')
-data.write('detune(uW)\ty_offset\tx_offset(Hz)\twidth(Hz)\tpeak\n')
+data.write('detune(uW)\ty_offset\tx_offset(Hz)\twidth(Hz)\tpeak\tsignal_ratio\n')
 
 
 for element in a:
