@@ -54,6 +54,11 @@ int factorial (int num)
  return factorial(num-1)*num; // recursive call
 }
 
+doub Gaussian(doub x,peroid,doub A)
+{
+    Return exp(-pow((x-0.5*period)/FWHM,2)/2);
+}
+
 doub ReRabi(doub x,doub period,doub peak)//脈衝包絡線函數(實部)，高斯函數*Re[e^{-i*phase}]
 {
   doub value=0;
