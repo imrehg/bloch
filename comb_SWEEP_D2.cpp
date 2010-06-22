@@ -5,7 +5,7 @@ int pulse_average=100;
 const int npulse=10000000;
 int ninterval_1=50,ninterval_2=500,ninterval_b=0;//npulse = number of pulse; interval_1 =steps in interval 1 ;ninterval_b= ninterval in a free iteration
 doub period0=10.87827848197104833208;
-doub frequency=0,peakO=0.02428235615859994948/2,FWHM=1; //about 100uW/cm2 A = 1ns
+doub frequency=0,peakO=0.02428235615859994948/2,FWHM=1; //about 100uW/cm2 A = 1ns for gaussian 0.03328456470147136997/2 for sinc
 const int  neq=32,neq_gr=16,ninterval=npulse*(ninterval_1+ninterval_2); // neq= nuber of equations, nexp= terms of expansion, ninterval= iteration terms
 int nexp=12;
 vector<doub> r(neq);
@@ -20,6 +20,7 @@ vector<doub> R_L(neq);
 doub lasDe = 0;
 vector<doub> EnergyDiff(neq-1);
 doub LineWidth=0.7*2*pi;//0.0052227*2*pi;//
+doub (*fucp)(doub x,doub period,doub A);
 
 
 int RealComp(int i,int j)
@@ -54,16 +55,27 @@ int factorial (int num)
  return factorial(num-1)*num; // recursive call
 }
 
-doub Gaussian(doub x,peroid,doub A)
+doub Gaussian(doub x,doub period,doub A)
 {
-    Return exp(-pow((x-0.5*period)/FWHM,2)/2);
+    return exp(-pow((x-0.5*period)/FWHM,2)/2);
+}
+
+doub Sinc(doub x,doub period,doub A)
+{
+    doub result;
+
+    if (x == 0)
+      result = 1;
+    else result =  sin(pi*(x-0.5*period)/A)/pi/(x-0.5*period)*A;
+
+    return result;
 }
 
 doub ReRabi(doub x,doub period,doub peak)//脈衝包絡線函數(實部)，高斯函數*Re[e^{-i*phase}]
 {
   doub value=0;
 
-  value=exp(-pow((x-0.5*period)/FWHM,2)/2);
+  value = (*fucp)(x,period,FWHM);
 
   return peak*value;
 }
@@ -359,7 +371,7 @@ int D1_coef (int L,int F,int mf){
  }
 
 
-int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune,doub A_Factor)
+int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune,doub A_Factor, string Func)
 {
 
   clear(A);
@@ -371,20 +383,38 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
   doub phase=0;
   ninterval_1 =n1-(n1%4);
   ninterval_2 = pow(2,int(log(n2)/log(2)));
-  fstream file1,file2;//file1:紀錄輸入的參數。file2://紀錄計算結果
+
   FWHM = A_Factor;//0.00175
-  peakO = sqrt(PeakPower/100/A_Factor)*0.02428235615859994948/2;
+
+  if ( Func == "Sinc")
+    {
+      peakO = sqrt(PeakPower/100/A_Factor)*0.03311444095209334951/2;
+      fucp = Sinc;
+    }
+  else
+    {
+      peakO = sqrt(PeakPower/100/A_Factor)*0.02428235615859994948/2;
+      fucp = Gaussian;
+    }
+
+
   nexp=expN;
-  stringstream strstream,strstream2;
-  string filename,filename2;
-  strstream<<"./Data/comb_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S.txt";
+
+  fstream file1,file2,file3;//file1:紀錄輸入的參數。file2://紀錄計算結果
+  stringstream strstream,strstream2,strstream3;
+  string filename,filename2,filename3;
+  strstream<<"./Data/comb_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
-  strstream2<<"./Data/comb_FS_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S.txt";
+  strstream2<<"./Data/comb_FS_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
   strstream2>>filename2;
   file1.open(filename2.c_str(), ios::out | ios::trunc);
+  strstream3<<"./Data/comb_PS_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
+  strstream3>>filename3;
+  file3.open(filename3.c_str(), ios::out | ios::trunc);
   file2.precision(15);
+
   col_matrix< vector<doub> > y0I(neq,neq);
   //initial condition
   col_matrix< vector<doub> > y0R(neq,neq);
@@ -444,7 +474,7 @@ for(int m= int(omp_get_thread_num()/2)*steps;m<=steps*(int(omp_get_thread_num()/
    doub De=1.0*m*(pow(-1,(omp_get_thread_num()%2+1)))*1.0/total_steps;
    doub period=period0/100*(100+De);
    doub peak=peakO*sqrt((100.0+De)/100);
-   doub interval_1=FWHM*5,interval_2=period-interval_1;
+   doub interval_1=FWHM*10,interval_2=period-interval_1;
    doub dt_1=interval_1/ninterval_1,dt_2=interval_2/ninterval_2;
 //   ninterval_b= int((phase_shift/2/pi*period)/dt_2);
    interval_2=period-interval_1;
@@ -515,6 +545,15 @@ if( k>=ninterval_2/2 && k<(ninterval_2/2+ninterval_1) ){
 //initailizing for M matrices
 //The reason to set the matrix this way(the second equation) is that actually calulated transition would be pure imaginary, but we set is to real(multiply a phase).
 //If we directly set M and run through the parameter, we will get a extra munus sign in the symmetric terms, which can't be used in the formalism applied in fun_matrix.
+
+if(omp_get_thread_num()==0)
+{
+  if( k>=ninterval_2/2 && k<(ninterval_2/2+ninterval_1) )
+    file3<<Time[k]<<"\t"<<ReRabi(Time[k],period,peak)<<endl;
+//  else
+//    file3<<Time[k]<<"\t"<<0<<endl;
+}
+
            }
 
 
