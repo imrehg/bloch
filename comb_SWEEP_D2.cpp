@@ -14,6 +14,8 @@ vector<doub> R(neq);
 //relaxation rate
 vector<doub> R_gr(neq);
 //relazation rate of ground state
+vector<doub> R_gr_balance(neq);
+//relazation rate of ground state balance
 col_matrix< vector<doub> > Rc(neq,neq);
 col_matrix< vector<doub> > A(neq,neq);
 vector<doub> R_L(neq);
@@ -100,7 +102,7 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
 {
 
   for (int i=0;i<neq;i++){
-     Trans(RealComp(i,i),RealComp(i,i))=-r[i]-R_gr[i];
+     Trans(RealComp(i,i),RealComp(i,i))=-r[i]-R_gr_balance[i];
      for (int j=0;j<neq;j++){
           if(i<j){
           Trans(RealComp(i,i),ImagComp(i,j))+=2*H(j,i);
@@ -116,7 +118,7 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
  for(int i=0;i<neq_gr;i++){
   for(int j=0;j<neq_gr;j++){
       if(i!=j)
-        Trans(RealComp(i+neq-neq_gr,i+neq-neq_gr),RealComp(j+neq-neq_gr,j+neq-neq_gr))+=R_gr[j+neq-neq_gr]/(neq_gr-1);
+        Trans(RealComp(i+neq-neq_gr,i+neq-neq_gr),RealComp(j+neq-neq_gr,j+neq-neq_gr))+=R_gr_balance[j+neq-neq_gr]/(neq_gr-1);
   }
  }
 
@@ -124,8 +126,14 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
 
  for (int j=1;j<neq;j++){
     for (int i=0;i<j;i++){
-       Trans(RealComp(i,j),RealComp(i,j))=-(R[i]+R[j]+R_L[i]+R_gr[i]+R_gr[j])/2;
+
+       if(i>=(neq-neq_gr)&&j>=(neq-neq_gr))
+           Trans(RealComp(i,j),RealComp(i,j))=-(R_gr[i]+R_gr[j])/2;
+       else
+          Trans(RealComp(i,j),RealComp(i,j))=-(R[i]+R[j])/2;  
+
        Trans(RealComp(i,j),ImagComp(i,j))=D(i,j);
+
        for (int l=0;l<neq;l++){
            if(l<j){
              Trans(RealComp(i,j),ImagComp(l,j))+=-H(i,l);
@@ -145,7 +153,12 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
 
  for (int j=1;j<neq;j++){
    for (int i=0;i<j;i++){
-       Trans(ImagComp(i,j),ImagComp(i,j))=-(R[i]+R[j]+R_L[i]+R_gr[i]+R_gr[j])/2;
+
+   if(i>=(neq-neq_gr)&&j>=(neq-neq_gr))
+       Trans(ImagComp(i,j),ImagComp(i,j))=-(R_gr[i]+R_gr[j])/2;
+   else
+      Trans(ImagComp(i,j),ImagComp(i,j))=-(R[i]+R[j])/2;
+
        Trans(ImagComp(i,j),RealComp(i,j))=-D(i,j);
       for (int l=0;l<neq;l++){
             Trans(ImagComp(i,j),RealComp(l,j))+=H(i,l);
@@ -155,6 +168,7 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
   }    //  Bloch eq for off diagonal imaginary part
 
 }
+
 void solve_Martix_new(col_matrix< vector<doub> > &M, col_matrix<vector<doub> > &Trans,col_matrix<vector<doub> > &Trans_Blank, col_matrix< vector<doub> >&D,doub dt1,doub dt2)// solve(presultI,presultR,M,k)
 {
   col_matrix< vector<doub> > Trans_I(neq*neq,neq*neq),Trans_C(neq*neq,neq*neq),Trans_E(neq*neq,neq*neq),Trans_2B(neq*neq,neq*neq),Trans_Ave_B(neq*neq,neq*neq);
@@ -275,6 +289,7 @@ for(int j=0;j<(log(ninterval_2/2)/log(2));j++){
    mult(Trans,Trans_2B,Trans_D);
    mult(Trans_2B,Trans_D,Trans);
 
+
 }
 
 
@@ -388,7 +403,7 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
 
   if ( Func == "Sinc")
     {
-      peakO = sqrt(PeakPower/100/A_Factor)*0.03311444095209334951/2;
+      peakO = sqrt(PeakPower/100/A_Factor)*0.03328456470147136997/2;
       fucp = Sinc;
     }
   else
@@ -400,9 +415,9 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
 
   nexp=expN;
 
-  fstream file1,file2,file3;//file1:紀錄輸入的參數。file2://紀錄計算結果
-  stringstream strstream,strstream2,strstream3;
-  string filename,filename2,filename3;
+  fstream file1,file2,file3,file4;//file1:紀錄輸入的參數。file2://紀錄計算結果
+  stringstream strstream,strstream2,strstream3,strstream4;
+  string filename,filename2,filename3,filename4;
   strstream<<"./Data/comb_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
@@ -413,6 +428,9 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
   strstream3<<"./Data/comb_PS_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
   strstream3>>filename3;
   file3.open(filename3.c_str(), ios::out | ios::trunc);
+//  strstream4<<"./Data/comb_MX_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
+//  strstream4>>filename4;
+//  file4.open(filename4.c_str(), ios::out | ios::trunc);
   file2.precision(15);
 
   col_matrix< vector<doub> > y0I(neq,neq);
@@ -467,7 +485,7 @@ for(int thread=0;thread<num_thread;thread++)
    int ninterval_m = (npulse-1);
 
 
-for(int m= int(omp_get_thread_num()/2)*steps;m<=steps*(int(omp_get_thread_num()/2)+1);m++)
+for(int m = int(omp_get_thread_num()/2)*steps; m < steps*(int(omp_get_thread_num()/2)+1);m++)
 {
    cout<<"T_"<<omp_get_thread_num()<<endl;
    cout<<m<<endl;
@@ -509,8 +527,10 @@ for(int m= int(omp_get_thread_num()/2)*steps;m<=steps*(int(omp_get_thread_num()/
    R[i]=LineWidth;
  }
 
-for(int i=0;i<neq_gr;i++)
+for(int i=0;i<neq_gr;i++){
    R_gr[i+neq-neq_gr]=gamma2;
+   R_gr_balance[i+neq-neq_gr]=1e-6;
+}
 
  //initailizing for relaxation rate
 
