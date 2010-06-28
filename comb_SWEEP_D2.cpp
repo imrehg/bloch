@@ -50,7 +50,7 @@ int ImagComp(int i,int j)
 }
 
 
-int factorial (int num)
+long long factorial (int num)
 {
  if (num==1)
   return 1;
@@ -130,7 +130,7 @@ void fun_Matrix(col_matrix< vector<doub> > &Trans, col_matrix< vector<doub> >&H,
        if(i>=(neq-neq_gr)&&j>=(neq-neq_gr))
            Trans(RealComp(i,j),RealComp(i,j))=-(R_gr[i]+R_gr[j])/2;
        else
-          Trans(RealComp(i,j),RealComp(i,j))=-(R[i]+R[j])/2;  
+          Trans(RealComp(i,j),RealComp(i,j))=-(R[i]+R[j])/2;
 
        Trans(RealComp(i,j),ImagComp(i,j))=D(i,j);
 
@@ -333,6 +333,17 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
          if(t==(ninterval_2/2+ninterval_1+1))
             copy(Trans_2B,Trans_B);
       }
+
+     if(t%2==1){
+        mult(Trans_B,Trans,Trans_D);
+        if(t!=(ninterval_2/2+ninterval_1+1))
+         add(scaled(Trans_D,dt2),Trans_Ave);
+     }else{
+        mult(Trans_B,Trans_D,Trans);
+        if(t!=(ninterval_2/2+ninterval_1+1))
+         add(scaled(Trans,dt2),Trans_Ave);
+     }
+
     }else{
       clear(Trans_B);
      for(int i=0;i<neq*neq;i++)
@@ -346,20 +357,20 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
             add(scaled(Trans_I,pow((dt1),j)/factorial(j)),Trans_B);
           }
          }
-    }
-
-//cout<<(clock()-start)*1.0/CLOCKS_PER_SEC<<endl;
 
 
-     if(t%2==1){
+    if(t%2==1){
         mult(Trans_B,Trans,Trans_D);
         if(t!=(ninterval_2/2+ninterval_1+1))
-         add(Trans_D,Trans_Ave);
+         add(scaled(Trans_D,dt1),Trans_Ave);
      }else{
         mult(Trans_B,Trans_D,Trans);
         if(t!=(ninterval_2/2+ninterval_1+1))
-         add(Trans,Trans_Ave);
+         add(scaled(Trans,dt1),Trans_Ave);
      }
+
+    }
+
 
      if(t==ninterval_2/2){
            copy(Trans,Trans_2B);
@@ -367,12 +378,14 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
      }
 
 //        copy(Trans_D,Trans);
-//        cout<<"nnz="<<nnz(Trans_E)<<endl;
 
   }
 
+
+
   mult(Trans_Ave_B,Trans,Trans_2B);
   add(Trans_2B,Trans_Ave);
+  copy(scaled(Trans_Ave,1.0/(dt1*ninterval_1+dt2*ninterval_2)),Trans_Ave);
   copy(Trans_D,Trans);
 
 }
@@ -396,8 +409,8 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
   clear(R_L);
   clear(EnergyDiff);
   doub phase=0;
-  ninterval_1 =n1-(n1%4);
-  ninterval_2 = pow(2,int(log(n2)/log(2)));
+  ninterval_1 = n1-(n1%4);
+  ninterval_2 = n2-(n2%4);// should change to pow(2,int(log(n2)/log(2))) if solve_function_new is applied
 
   FWHM = A_Factor;//0.00175
 
@@ -529,7 +542,7 @@ for(int m = int(omp_get_thread_num()/2)*steps; m < steps*(int(omp_get_thread_num
 
 for(int i=0;i<neq_gr;i++){
    R_gr[i+neq-neq_gr]=gamma2;
-   R_gr_balance[i+neq-neq_gr]=1e-6;
+   R_gr_balance[i+neq-neq_gr]=gamma2;
 }
 
  //initailizing for relaxation rate
@@ -657,7 +670,7 @@ doub buffer=0,buffer2=0,bufferP=0,bufferC=0;
    for(int d=0;d<neq*neq;d++){
      buffer+=Trans_AVE(RealComp(D1_coef(1,3,j),D1_coef(1,3,j)),d)*Result(d,k%(pulse_average+1));
    }
- for (int j=-3;j<5;j++)
+ for (int j=-4;j<5;j++)
    for(int d=0;d<neq*neq;d++){
      buffer2+=Trans_AVE(RealComp(D1_coef(1,4,j),D1_coef(1,4,j)),d)*Result(d,k%(pulse_average+1));
    }
@@ -669,10 +682,8 @@ doub buffer=0,buffer2=0,bufferP=0,bufferC=0;
  for(int n=-4;n<5;n++){
    bufferC+=(pow(Result(RealComp(D1_coef(0,3,l),D1_coef(0,4,n)),k%(pulse_average+1)),2)+pow(Result(ImagComp(D1_coef(0,3,l),D1_coef(0,4,n)),k%(pulse_average+1)),2));
    }
- bufferC=bufferC/63;
 
- buffer=buffer/(ninterval_1+ninterval_2+1);
- buffer2=buffer2/(ninterval_1+ninterval_2+1);
+ bufferC=bufferC/63;
 
  file2<<1/period<<"\t";
  file2<<buffer+buffer2<<"\t";
