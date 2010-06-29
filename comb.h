@@ -1,6 +1,6 @@
 #ifndef COMB_H_INCLUDED
 #define COMB_H_INCLUDED
-#define GMM_USES_LAPACK
+//#define GMM_USES_LAPACK
 #include <iostream> //FOR file IO
 #include <fstream>//For file IO
 //#include <cstdlib> //

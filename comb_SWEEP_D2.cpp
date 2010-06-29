@@ -1,4 +1,4 @@
-#define GMM_USES_LAPACK
+//#define GMM_USES_LAPACK
 #include "comb.h"
 doub phase=0;
 int pulse_average=100;
