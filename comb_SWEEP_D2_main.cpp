@@ -10,12 +10,12 @@ int main()
 
   for(int i=1;i<6;i++){
    for(int j=1;j<4;j++){
-    time_t T1 = clock(),T2;
+    time_t T1 = time(NULL),T2;
     sweep(20*2*pi,0.7*2*pi,1,400000,1000,1/pow(10,10),0,10,12-i,10*j,600,15,0,0.001,"Gaussian");
-    T2 = clock();
+    T2 = time(NULL);
     file1<<"Gaussian\t"<<12-i<<"\t"<<10*j<<"\t"<<(T2-T1)<<endl;
     sweep(20*2*pi,0.7*2*pi,1,400000,1000,1/pow(10,10),0,10,12-i,10*j,600,15,0,0.001,"Sinc");
-    T1 = clock();
+    T1 = time(NULL);
     file1<<"sinc\t"<<12-i<<"\t"<<10*j<<"\t"<<(T1-T2)<<endl;
    }
   }

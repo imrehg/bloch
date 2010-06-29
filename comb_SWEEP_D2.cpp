@@ -1,4 +1,4 @@
-//#define GMM_USES_LAPACK
+#define GMM_USES_LAPACK
 #include "comb.h"
 doub phase=0;
 int pulse_average=100;
@@ -385,7 +385,8 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
 
   mult(Trans_Ave_B,Trans,Trans_2B);
   add(Trans_2B,Trans_Ave);
-  copy(scaled(Trans_Ave,1.0/(dt1*ninterval_1+dt2*ninterval_2)),Trans_Ave);
+  copy(scaled(Trans_Ave,1.0/(dt1*ninterval_1+dt2*ninterval_2)),Trans_2B);
+  copy(Trans_2B,Trans_Ave);
   copy(Trans_D,Trans);
 
 }
