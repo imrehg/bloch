@@ -382,14 +382,13 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
   }
 
 
- if((ninterval_2/2+ninterval_1+1)%2==1)
-    copy(Trans_D,Trans);
 
 
   mult(Trans_Ave_B,Trans,Trans_2B);
   add(Trans_2B,Trans_Ave);
   copy(scaled(Trans_Ave,1.0/(dt1*ninterval_1+dt2*ninterval_2)),Trans_2B);
   copy(Trans_2B,Trans_Ave);
+  copy(Trans_D,Trans);
 
 
 }
@@ -413,8 +412,8 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
   clear(R_L);
   clear(EnergyDiff);
   doub phase=0;
-  ninterval_1 = n1-(n1%2);
-  ninterval_2 = n2-(n2%2);// should change to pow(2,int(log(n2)/log(2))) if solve_function_new is applied
+  ninterval_1 = n1-(n1%4);
+  ninterval_2 = n2-(n2%4);// should change to pow(2,int(log(n2)/log(2))) if solve_function_new is applied
 
   FWHM = A_Factor;//0.00175
 
@@ -435,14 +434,14 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
   fstream file1,file2,file3,file4;//file1:紀錄輸入的參數。file2://紀錄計算結果
   stringstream strstream,strstream2,strstream3,strstream4;
   string filename,filename2,filename3,filename4;
-  strstream<<"./Data/comb_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
+  strstream<<"./Data/comb_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<ninterval_1<<"_N2_"<<ninterval_2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
   strstream>>filename;
   cout<<filename.c_str()<<endl;
   file2.open(filename.c_str(),ios::out | ios::trunc);
-  strstream2<<"./Data/comb_FS_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
+  strstream2<<"./Data/comb_FS_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<ninterval_1<<"_N2_"<<ninterval_2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
   strstream2>>filename2;
   file1.open(filename2.c_str(), ios::out | ios::trunc);
-  strstream3<<"./Data/comb_PS_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
+  strstream3<<"./Data/comb_PS_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<ninterval_1<<"_N2_"<<ninterval_2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
   strstream3>>filename3;
   file3.open(filename3.c_str(), ios::out | ios::trunc);
 //  strstream4<<"./Data/comb_MX_"<<"g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<n1<<"_N2_"<<n2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
