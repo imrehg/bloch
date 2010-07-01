@@ -66,7 +66,7 @@ doub Sinc(doub x,doub period,doub A)
 {
     doub result;
 
-    if (x == 0)
+    if ((x-0.5*period) == 0)
       result = 1;
     else result =  sin(pi*(x-0.5*period)/A)/pi/(x-0.5*period)*A;
 
@@ -678,13 +678,17 @@ doub buffer=0,buffer2=0,bufferP=0,bufferC=0;
      buffer2+=Trans_AVE(RealComp(D1_coef(1,4,j),D1_coef(1,4,j)),d)*Result(d,k%(pulse_average+1));
    }
 
+ cout<<"UPP="<<buffer+buffer2<<endl;
+
  for(int c=0;c<neq;c++)
    bufferP+=Result(c,k%(pulse_average+1));
 
  for(int l=-3;l<4;l++)
  for(int n=-4;n<5;n++){
    bufferC+=(pow(Result(RealComp(D1_coef(0,3,l),D1_coef(0,4,n)),k%(pulse_average+1)),2)+pow(Result(ImagComp(D1_coef(0,3,l),D1_coef(0,4,n)),k%(pulse_average+1)),2));
-   }
+ }
+
+ cout<<"BC="<<bufferC<<endl;
 
  bufferC=bufferC/63;
 
@@ -695,6 +699,7 @@ doub buffer=0,buffer2=0,bufferP=0,bufferC=0;
  file2<<bufferC<<"\t";
  file2<<bufferP<<"\t";
  file2<<k*Matrix_Step*period<<"\t";
+ file2<<omp_get_thread_num()<<"\t";
  file2<<m<<endl;
 }
 
