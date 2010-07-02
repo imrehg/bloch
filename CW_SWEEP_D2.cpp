@@ -23,7 +23,7 @@ doub LineWidth=0.7*2*pi;//0.0052227*2*pi;//
 
 
 
-int factorial (int num)
+long long factorial (int num)
 {
  if (num==1)
   return 1;
