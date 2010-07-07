@@ -213,7 +213,7 @@ int sweep(doub g2, doub LineW,doub period,int period_steps,int sweep_steps,doub 
  long Matrix_Step = pow(2,(Msteps-1));
  pulse_average=(conS/Matrix_Step+1);
 
- int num_thread = 4;
+ int num_thread = 2;
 
 #pragma omp num_threads(num_thread)
 #pragma omp parallel for
