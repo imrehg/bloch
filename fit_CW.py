@@ -7,11 +7,11 @@ from scipy.optimize import leastsq
 #import sys
 filename = 'data_CW.txt'
 
-g2 = ['%g' %(50*(i+1)) for i in range(10)]
+g2 = ['%g' %(0.5*200*(i+1)) for i in range(5)]
 print g2
 
 def fit(line):
-  filename = 'CW_g2_20_LW_0.7_dt_0.01_%s_uWcm2_1e-10_conS_10_O=14.txt' %line
+  filename = 'CW_g2_20_LW_0.7_dt_0.01_%s_uWcm2_1e-10_conS_10_O=12.txt' %line
   print filename
   #filename = sys.argv[1]
   data = loadtxt(filename,skiprows=1)
@@ -26,19 +26,19 @@ def fit(line):
   xfit = linspace(min(x),max(x), 1001)
   plot(x,y,'.')
   plot(xfit,fit_func(p1,xfit),'r-')
-  savefig('CW_g2_20_LW_0.7_dt_0.01_%s_uWcm2_1e-10_conS_10_O=14.png'%line) 
+  savefig('CW_g2_20_LW_0.7_dt_0.01_%s_uWcm2_1e-10_conS_10_O=12.png'%line) 
   clf()
   p1[0]=p1[0]/1e10
   p1[1]=p1[1]/1e7*1e9
   p1[2]=p1[2]/1e7*1e9
-  p1[3]=p1[3]/1e8/p1[2]*2/pi
-  pfinal=r_[float(line)*2,p1,abs(p1[3]/p1[0])]
+  p1[3]=p1[3]/1e10
+  pfinal=r_[float(line)*2,p1]
   return pfinal
 
 
 a = [fit(gg) for gg in g2]
 data = open( filename, 'w')
-data.write('detune(uW)\ty_offset\tx_offset(Hz)\twidth(Hz)\tpeak\tslpoe\tcontrast\n')
+data.write('detune(uW)\ty_offset\tx_offset(Hz)\twidth(Hz)\tpeak\n')
 
 for element in a:
 
