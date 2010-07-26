@@ -495,12 +495,11 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
     doub period0=10.87827848197104833208;//Set the period of the ground state hyperfine transition.
     doub phase=0;
     //Set the pahse difference of each pulse, which is not apply now, the phase difference is set to zero. Further modification should be done if non zero phase is desired.
-    doub frequency=0,peakO=0.02428235615859994948/2;
+    doub peakO=0.02428235615859994948/2;
     //about 100uW/cm2 A = 1ns for gaussian 0.03328456470147136997/2 for sinc.
-    doub LineWidth=0.7*2*pi;//0.0052227*2*pi;//
+    doub LineWidth=LineW;//0.0052227*2*pi;//
     //Upper level linewidth
-    doub lasDe = 0;
-    //Laser Detuning
+    nexp=expN;
 
     clear(A);
     clear(R);
@@ -512,8 +511,7 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
     ninterval_2 = n2-(n2%4);
     // should change to pow(2,int(log(n2)/log(2))) if solve_function_new is applied
 
-    nexp=expN;
-    LineWidth=LineW;
+
 
     doub gamma2=g2/1E9;
     int Matrix_Step = pow(2,(Msteps-1));
