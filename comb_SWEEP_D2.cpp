@@ -473,7 +473,7 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
 
 
 
-int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune,doub A_Factor, string Func)
+int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune,doub A_Factor, string Func,int numOfThread)
 {
 
     fstream file1,file2,file3;
@@ -492,7 +492,7 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
     file2.precision(15);
     //Setup log file
 
-    doub period0=10.87827848197104833208;//Set the period of the ground state hyperfine transition.
+    const doub period0=10.87827848197104833208;//Set the period of the ground state hyperfine transition.
     doub phase=0;
     //Set the pahse difference of each pulse, which is not apply now, the phase difference is set to zero. Further modification should be done if non zero phase is desired.
     doub peakO=0.02428235615859994948/2;
@@ -568,13 +568,9 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
 
     //initialzing the A coefficients
 
-
-
-
-    int num_thread = 8;
-    #pragma omp num_threads(num_thread)
+    #pragma omp num_threads(numOfThread)
     #pragma omp parallel for
-    for (int thread=0;thread<num_thread;thread++)
+    for (int thread=0;thread<numOfThread;thread++)
     {
         doub *Time= new doub[ninterval_1+ninterval_2+1];
         col_matrix< vector<doub> > M(neq,(ninterval_1+ninterval_2+1)*neq);
