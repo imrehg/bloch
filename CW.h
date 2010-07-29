@@ -18,6 +18,6 @@
 using namespace gmm;
 using namespace std;
 typedef long double doub;
-extern int sweep(doub g2, doub LineW,doub period,int period_steps,int sweep_steps,doub Max_detune,doub peak_1,doub peak_2,doub convergence,doub convergence_threshold,int conS,int expN,int Msteps);
+extern int sweep(doub g2, doub LineW,doub period,int period_steps,int sweep_steps,doub Max_detune,doub peak_1,doub peak_2,doub convergence,doub convergence_threshold,int conS,int expN,int Msteps, int polarization, doub dLine, int numThread );
 const doub pi=3.14159265358979323846264338327950288419716939937511;
 #endif // COMB_H_INCLUDED
