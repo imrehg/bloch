@@ -214,7 +214,7 @@ int sweep(doub g2, doub LineW,doub period,int period_steps,int sweep_steps,doub 
     file1.open(filename2.c_str(), ios::out | ios::trunc);
     file2.precision(15);
 
-    file2<<"Rap Rate Deutne"<<"\t";
+    file2<<"Laser Deutne"<<"\t";
     file2<<"Upper Level Population"<<"\t";
     file2<<"F=4 Upper Level Population"<<"\t";
     file2<<"F=3 Upper Level Population"<<"\t";

@@ -475,7 +475,7 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
 
 int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune,doub A_Factor, string Func,int numOfThread,int polarization, int dLine)
 {
-    
+
 
     fstream file1,file2,file3;
     stringstream strstream,strstream2,strstream3,strstream4;
@@ -490,7 +490,14 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
     strstream3<<"./Data/comb_D"<<dLine<<"_PS_pol_"<<polarization<<"_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<expN<<"_N1_"<<ninterval_1<<"_N2_"<<ninterval_2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
     strstream3>>filename3;
     file3.open(filename3.c_str(), ios::out | ios::trunc);
+
     file2.precision(15);
+    file2<<"Rep rate Deutne(Ghz)"<<"\t";
+    file2<<"Total Upper Level Population"<<"\t";
+    file2<<"F=3 Upper Level Population"<<"\t";
+    file2<<"F=4 Upper Level Population"<<"\t";
+    file2<<"Average Ground State Coherence"<<"\t";
+    file2<<"Stable time"<<"\t"<<endl;
     //Setup log file
 
     const doub period0=10.87827848197104833208;//Set the period of the ground state hyperfine transition.
@@ -820,8 +827,6 @@ int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub conve
             file2<<bufferC<<"\t";
             file2<<bufferP<<"\t";
             file2<<k*Matrix_Step*period<<"\t";
-            file2<<omp_get_thread_num()<<"\t";
-            file2<<m<<endl;
         }
 
         ///////////////////////////////End of Sweeping//////////////////////////////////
