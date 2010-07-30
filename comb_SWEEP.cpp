@@ -475,18 +475,19 @@ void solve_Martix(col_matrix< vector<doub> >&M, col_matrix<vector<doub> > &Trans
 
 int sweep(doub g2,doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune,doub A_Factor, string Func,int numOfThread,int polarization, int dLine)
 {
+    
 
     fstream file1,file2,file3;
     stringstream strstream,strstream2,strstream3,strstream4;
     string filename,filename2,filename3;
-    strstream<<"./Data/comb_D"<<dLine<<"_pol_"<<polarization<<"_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<ninterval_1<<"_N2_"<<ninterval_2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
+    strstream<<"./Data/comb_D"<<dLine<<"_pol_"<<polarization<<"_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<expN<<"_N1_"<<ninterval_1<<"_N2_"<<ninterval_2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
     strstream>>filename;
     cout<<filename.c_str()<<endl;
     file2.open(filename.c_str(),ios::out | ios::trunc);
-    strstream2<<"./Data/comb_D"<<dLine<<"_FS_pol_"<<polarization<<"_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<ninterval_1<<"_N2_"<<ninterval_2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
+    strstream2<<"./Data/comb_D"<<dLine<<"_FS_pol_"<<polarization<<"_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<expN<<"_N1_"<<ninterval_1<<"_N2_"<<ninterval_2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
     strstream2>>filename2;
     file1.open(filename2.c_str(), ios::out | ios::trunc);
-    strstream3<<"./Data/comb_D"<<dLine<<"_PS_pol_"<<polarization<<"_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<nexp<<"_N1_"<<ninterval_1<<"_N2_"<<ninterval_2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
+    strstream3<<"./Data/comb_D"<<dLine<<"_PS_pol_"<<polarization<<"_g2_"<<g2/2/pi<<"_LW_"<<LineW/2/pi<<"GHz_"<<PeakPower<<"uWcm2_"<<convergence<<"_conS_"<<conS<<"_O="<<expN<<"_N1_"<<ninterval_1<<"_N2_"<<ninterval_2<<"_D_"<<detune/2/pi*1000<<"MHz_A_"<<A_Factor<<"_S_"<<Func<<".txt";
     strstream3>>filename3;
     file3.open(filename3.c_str(), ios::out | ios::trunc);
     file2.precision(15);
