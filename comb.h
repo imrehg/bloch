@@ -1,6 +1,6 @@
 #ifndef COMB_H_INCLUDED
 #define COMB_H_INCLUDED
-#define GMM_USES_LAPACK
+//#define GMM_USES_LAPACK
 #include <iostream> //FOR file IO
 #include <fstream>//For file IO
 //#include <cstdlib> //
@@ -18,7 +18,6 @@
 using namespace gmm;
 using namespace std;
 typedef long double doub;
-extern int sweep(doub g2, doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune,doub A_Factor,string Func);
-extern doub sweep_single(doub period_set,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune);
+extern int sweep(doub g2, doub LineW,int steps,int total_steps,doub PeakPower,doub convergence,doub convergence_threshold,int conS,int expN,int n1, int n2,int Msteps,doub detune,doub A_Factor,string Func,int numOfThread,int polarization, int dLine);
 const doub pi=3.14159265358979323846264338327950288419716939937511;
 #endif // COMB_H_INCLUDED

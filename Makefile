@@ -2,10 +2,10 @@ CC=g++
 CXXFLAGS=-O3 -llapack -lblas -fopenmp 
 LATLAS=/usr/lib/atlas/liblapack.a /usr/lib/atlas/libblas.a -latlas
 LDFLAGS=-o
-MAIN=comb_SWEEP_D2_main.cpp
-D1=comb_SWEEP_D2.cpp
-MAIN_CW=CW_SWEEP_D2_main.cpp
-CW=CW_SWEEP_D2.cpp
+MAIN=comb_SWEEP_main.cpp
+D1=comb_SWEEP.cpp
+MAIN_CW=CW_SWEEP_main.cpp
+CW=CW_SWEEP.cpp
 O=$(MAIN:.cpp=.o)
 O2=$(D1:.cpp=.o)
 O3=$(MAIN_CW:.cpp=.o)
